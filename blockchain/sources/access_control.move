@@ -274,7 +274,7 @@ module medichain_healthcare::access_control {
     /// Khởi tạo permissions mặc định cho các roles
     fun init_default_permissions(registry: &mut AccessControlRegistry, ctx: &mut TxContext) {
         // Admin: tất cả quyền
-        let admin_perms = vector::empty<u8>();
+        let mut admin_perms = vector::empty<u8>();
         vector::push_back(&mut admin_perms, PERM_READ_PATIENT);
         vector::push_back(&mut admin_perms, PERM_WRITE_PATIENT);
         vector::push_back(&mut admin_perms, PERM_READ_EHR);
@@ -292,7 +292,7 @@ module medichain_healthcare::access_control {
         });
         
         // Doctor: đọc/ghi bệnh án, kê đơn
-        let doctor_perms = vector::empty<u8>();
+        let mut doctor_perms = vector::empty<u8>();
         vector::push_back(&mut doctor_perms, PERM_READ_PATIENT);
         vector::push_back(&mut doctor_perms, PERM_READ_EHR);
         vector::push_back(&mut doctor_perms, PERM_WRITE_EHR);
@@ -304,7 +304,7 @@ module medichain_healthcare::access_control {
         });
         
         // Patient: đọc dữ liệu của mình, cấp/thu hồi quyền
-        let patient_perms = vector::empty<u8>();
+        let mut patient_perms = vector::empty<u8>();
         vector::push_back(&mut patient_perms, PERM_READ_PATIENT);
         vector::push_back(&mut patient_perms, PERM_READ_EHR);
         vector::push_back(&mut patient_perms, PERM_GRANT_ACCESS);
@@ -316,7 +316,7 @@ module medichain_healthcare::access_control {
         });
         
         // Pharmacy: cấp phát thuốc
-        let pharmacy_perms = vector::empty<u8>();
+        let mut pharmacy_perms = vector::empty<u8>();
         vector::push_back(&mut pharmacy_perms, PERM_DISPENSE_PRESCRIPTION);
         
         table::add(&mut registry.role_permissions, ROLE_PHARMACY, RolePermissions {
@@ -325,7 +325,7 @@ module medichain_healthcare::access_control {
         });
         
         // Nurse: đọc bệnh án
-        let nurse_perms = vector::empty<u8>();
+        let mut nurse_perms = vector::empty<u8>();
         vector::push_back(&mut nurse_perms, PERM_READ_PATIENT);
         vector::push_back(&mut nurse_perms, PERM_READ_EHR);
         
