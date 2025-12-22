@@ -6,205 +6,320 @@
     <title>MediChain - Hệ thống Y tế Blockchain</title>
 
     <!-- CSS -->
+    <link rel="stylesheet" href="/frontend/css/common.css" />
     <link rel="stylesheet" href="/frontend/css/landing.css" />
+    <link rel="stylesheet" href="/frontend/css/responsive.css" />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
 
     <!-- Sui Wallet Standard -->
     <script src="https://unpkg.com/@mysten/wallet-standard@latest/dist/index.umd.js"></script>
   </head>
-  <body class="login-page">
-    <div class="login-container">
-      <div class="login-card">
-        <!-- Logo -->
-        <div class="logo">
+  <body class="landing-page">
+    <div class="landing-container">
+      <!-- Hero Section -->
+      <div class="hero-section">
+        <div class="hero-logo">
           <div class="logo-icon">
-            <svg width="60" height="60" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 2L2 7L12 12L22 7L12 2Z"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M2 17L12 22L22 17"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M2 12L12 17L22 12"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <i class="fas fa-shield-heart"></i>
           </div>
           <h1>MediChain</h1>
-          <p class="subtitle">Hệ thống Quản lý Y tế Blockchain</p>
+          <p class="hero-tagline">Hệ thống Quản lý Y tế trên Blockchain Sui</p>
         </div>
 
-        <!-- Features -->
-        <div class="features">
-          <div class="feature">
-            <div class="feature-icon blue">🔒</div>
-            <div>
-              <h3>Bảo mật cao</h3>
-              <p>Dữ liệu được mã hóa trên blockchain</p>
-            </div>
-          </div>
-          <div class="feature">
-            <div class="feature-icon green">📋</div>
-            <div>
-              <h3>Bệnh án điện tử</h3>
-              <p>Quản lý và chia sẻ dễ dàng</p>
-            </div>
-          </div>
-          <div class="feature">
-            <div class="feature-icon purple">💊</div>
-            <div>
-              <h3>Đơn thuốc số</h3>
-              <p>Không thể giả mạo, an toàn tuyệt đối</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Connect Wallet Button -->
-        <button id="connectWalletBtn" class="btn-primary btn-large">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M21 18V19C21 20.1 20.1 21 19 21H5C3.89 21 3 20.1 3 19V5C3 3.9 3.89 3 5 3H19C20.1 3 21 3.9 21 5V6H12C10.89 6 10 6.9 10 8V16C10 17.1 10.89 18 12 18H21ZM12 16H22V8H12V16ZM16 13.5C15.17 13.5 14.5 12.83 14.5 12C14.5 11.17 15.17 10.5 16 10.5C16.83 10.5 17.5 11.17 17.5 12C17.5 12.83 16.83 13.5 16 13.5Z"
-              fill="currentColor"
-            />
-          </svg>
-          Kết nối Sui Wallet
-        </button>
-
-        <p class="help-text">
-          Chưa có Sui Wallet?
-          <a
-            href="https://chromewebstore.google.com/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil"
-            target="_blank"
-          >
-            Tải về tại đây
-          </a>
+        <p class="hero-description">
+          MediChain sử dụng công nghệ blockchain để bảo vệ dữ liệu y tế của bạn,
+          đảm bảo tính riêng tư, minh bạch và quyền sở hữu dữ liệu. Tất cả hồ sơ
+          được mã hóa và lưu trữ an toàn trên mạng phi tập trung.
         </p>
       </div>
 
-      <!-- Network Info -->
-      <div class="network-info">
-        <span class="network-badge">Testnet</span>
-        <span class="network-status">
-          <span class="status-dot"></span>
-          Đã kết nối
-        </span>
+      <!-- Features Grid -->
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon medical-record">
+            <i class="fas fa-file-medical"></i>
+          </div>
+          <h3>Bệnh án điện tử</h3>
+          <p>
+            Lưu trữ và quản lý bệnh án một cách an toàn trên blockchain với khả
+            năng truy xuất minh bạch.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon prescription">
+            <i class="fas fa-prescription-bottle-medical"></i>
+          </div>
+          <h3>Đơn thuốc số</h3>
+          <p>
+            Kê đơn thuốc không thể giả mạo, theo dõi toàn trình sử dụng thuốc và
+            hạn sử dụng.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon appointment">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+          <h3>Lịch hẹn thông minh</h3>
+          <p>
+            Quản lý lịch hẹn khám bệnh, nhắc nhở tự động và xác nhận qua
+            blockchain.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon share">
+            <i class="fas fa-share-alt"></i>
+          </div>
+          <h3>Chia sẻ có kiểm soát</h3>
+          <p>
+            Chia sẻ hồ sơ y tế với bác sĩ mà bạn tin tưởng mà không mất quyền sở
+            hữu.
+          </p>
+        </div>
       </div>
+
+      <!-- CTA Section -->
+      <div class="cta-section">
+        <h2>Sẵn sàng bắt đầu?</h2>
+        <p>Kết nối ví Sui của bạn để truy cập hệ thống MediChain</p>
+
+        <div class="cta-buttons">
+          <button id="connectWalletBtn" class="btn btn-primary btn-large">
+            <i class="fas fa-wallet"></i>
+            Kết nối Sui Wallet
+          </button>
+
+          <button
+            class="btn btn-outline btn-large"
+            onclick="window.open('https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil', '_blank')"
+          >
+            <i class="fas fa-download"></i>
+            Cài đặt Ví
+          </button>
+        </div>
+
+        <div class="wallet-info">
+          <p>
+            <i class="fas fa-info-circle"></i>
+            Hệ thống đang chạy trên
+            <span class="network-badge">Sui Testnet</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="landing-footer">
+        <div class="footer-logo">
+          <i class="fas fa-shield-heart"></i>
+          <span>MediChain</span>
+        </div>
+
+        <div class="footer-links">
+          <a href="#" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+          <a href="#" target="_blank"
+            ><i class="fas fa-file-contract"></i> Điều khoản</a
+          >
+          <a href="#" target="_blank"
+            ><i class="fas fa-shield-alt"></i> Bảo mật</a
+          >
+          <a href="#" target="_blank"
+            ><i class="fas fa-question-circle"></i> Trợ giúp</a
+          >
+        </div>
+
+        <p class="copyright">
+          © 2024 MediChain. Tất cả các quyền được bảo lưu.
+        </p>
+      </footer>
     </div>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay" style="display: none">
       <div class="spinner"></div>
-      <p>Đang kết nối ví...</p>
+      <p class="loading-text">Đang kết nối ví...</p>
     </div>
 
-    <!-- Error Notification -->
-    <div
-      id="errorNotification"
-      style="
-        display: none;
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #ff4757;
-        color: white;
-        padding: 15px 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        z-index: 10000;
-      "
-    >
-      <span id="errorMessage"></span>
+    <!-- Success Modal -->
+    <div id="successModal" class="modal-overlay" style="display: none">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>
+            <i class="fas fa-check-circle text-success"></i> Kết nối thành công!
+          </h3>
+          <button class="modal-close" onclick="closeModal('successModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>
+            Ví của bạn đã được kết nối thành công. Đang chuyển hướng đến
+            Dashboard...
+          </p>
+          <div id="walletInfo" class="mt-3 p-3 bg-light rounded">
+            <p><strong>Địa chỉ ví:</strong> <span id="walletAddress"></span></p>
+            <p>
+              <strong>Mạng:</strong>
+              <span class="badge badge-primary">Sui Testnet</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Modal (with Install Link) -->
+    <div id="walletErrorModal" class="modal-overlay" style="display: none">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>
+            <i class="fas fa-exclamation-circle text-danger"></i> Lỗi kết nối
+          </h3>
+          <button class="modal-close" onclick="closeModal('walletErrorModal')">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="walletErrorMessage">
+            Đã xảy ra lỗi khi kết nối ví. Vui lòng thử lại.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('walletErrorModal')"
+          >
+            Đóng
+          </button>
+          <button class="btn btn-primary" onclick="retryConnection()">
+            Thử lại
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Scripts -->
-    <script src="js/config.js"></script>
-    <script src="js/wallet.js"></script>
-    <script>
-      // Show error notification
-      function showErrorNotification(message) {
-        const notification = document.getElementById("errorNotification");
-        const messageEl = document.getElementById("errorMessage");
-        messageEl.textContent = message;
-        notification.style.display = "block";
+    <script src="/frontend/js/config.js"></script>
+    <script src="/frontend/js/wallet.js"></script>
 
-        setTimeout(() => {
-          notification.style.display = "none";
-        }, 5000);
+    <script>
+      // Helper function to close modal
+      function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
       }
 
-      // Connect Wallet Button
+      // Helper function to show modal
+      function showModal(modalId) {
+        document.getElementById(modalId).style.display = "flex";
+      }
+
+      // Retry connection function
+      function retryConnection() {
+        closeModal("walletErrorModal");
+        document.getElementById("connectWalletBtn").click();
+      }
+
+      // Connect Wallet Button Handler
       document
         .getElementById("connectWalletBtn")
-        .addEventListener("click", async () => {
+        .addEventListener("click", async function () {
           const overlay = document.getElementById("loadingOverlay");
+          const btn = this;
+
+          // Disable button and show loading
+          btn.disabled = true;
           overlay.style.display = "flex";
 
           try {
-            // Check if wallet is installed
-            if (typeof window.suiWallet === "undefined") {
-              throw new Error("Vui lòng cài đặt Sui Wallet extension trước");
-            }
-
-            // Connect wallet
-            const connected = await connectWallet();
+            // Use the wallet API from wallet.js
+            const connected = await window.walletAPI.connectWallet();
 
             if (connected) {
-              // Save to localStorage
-              const accounts = await window.suiWallet.getAccounts();
-              if (accounts && accounts.length > 0) {
-                localStorage.setItem("medichain_wallet", accounts[0]);
+              // Get wallet address
+              const address = await window.walletAPI.getWalletAddress();
 
-                // Redirect to dashboard
+              if (address) {
+                // Show success modal
+                showModal("successModal");
+                document.getElementById("walletAddress").textContent =
+                  window.walletAPI.formatWalletAddress(address);
+
+                // Redirect to dashboard after 2 seconds
                 setTimeout(() => {
                   window.location.href = "dashboard.html";
-                }, 500);
+                }, 2000);
               } else {
-                throw new Error("Không tìm thấy tài khoản ví");
+                throw new Error("Không thể lấy địa chỉ ví");
               }
-            } else {
-              throw new Error("Kết nối ví thất bại");
             }
           } catch (error) {
-            console.error("Lỗi kết nối:", error);
-            showErrorNotification(
-              error.message || "Không thể kết nối ví. Vui lòng thử lại."
-            );
+            console.error("Connection error:", error);
+
+            // Error is already shown by wallet.js showWalletInstallModal()
+            // But we can add additional handling here if needed
+            if (!window.walletAPI.isWalletInstalled()) {
+              // Modal already shown by wallet.js
+            } else {
+              // Show generic error modal
+              showModal("walletErrorModal");
+              document.getElementById("walletErrorMessage").textContent =
+                error.message ||
+                "Đã xảy ra lỗi khi kết nối ví. Vui lòng thử lại.";
+            }
           } finally {
             overlay.style.display = "none";
+            btn.disabled = false;
           }
         });
 
-      // Check if already connected
-      window.addEventListener("load", async () => {
-        const wallet = localStorage.getItem("medichain_wallet");
-        if (wallet) {
-          // Verify wallet is still connected
-          try {
-            if (typeof window.suiWallet !== "undefined") {
-              const accounts = await window.suiWallet.getAccounts();
-              if (accounts && accounts.length > 0) {
-                // Still connected, redirect to dashboard
-                window.location.href = "dashboard.html";
-                return;
-              }
-            }
-            // Not connected anymore, clear storage
-            localStorage.removeItem("medichain_wallet");
-          } catch (error) {
-            console.error("Error checking wallet:", error);
-            localStorage.removeItem("medichain_wallet");
+      // Check if already connected on page load
+      window.addEventListener("load", async function () {
+        try {
+          // Check if wallet is connected
+          const isConnected = await window.walletAPI.isWalletConnected();
+
+          if (isConnected) {
+            const address = await window.walletAPI.getWalletAddress();
+            console.log("Already connected to wallet:", address);
+
+            // Show a brief notification
+            const overlay = document.getElementById("loadingOverlay");
+            const loadingText = overlay.querySelector(".loading-text");
+            loadingText.textContent = "Đã kết nối! Đang chuyển hướng...";
+            overlay.style.display = "flex";
+
+            // Auto-redirect to dashboard
+            setTimeout(() => {
+              window.location.href = "/dashboard.html";
+            }, 1000);
           }
+        } catch (error) {
+          console.error("Error checking wallet connection:", error);
+        }
+      });
+
+      // Close modals when clicking outside
+      document.querySelectorAll(".modal-overlay").forEach((overlay) => {
+        overlay.addEventListener("click", function (e) {
+          if (e.target === this) {
+            this.style.display = "none";
+          }
+        });
+      });
+
+      // Check wallet installation status on page load
+      window.addEventListener("load", function () {
+        if (!window.walletAPI.isWalletInstalled()) {
+          console.warn(
+            "Sui Wallet not detected. User will be prompted to install when connecting."
+          );
+        } else {
+          console.log("Sui Wallet detected and ready.");
         }
       });
     </script>

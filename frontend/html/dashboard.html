@@ -6,11 +6,11 @@
     <title>Dashboard - MediChain</title>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/common.css" />
-    <link rel="stylesheet" href="css/dashboard.css" />
-    <link rel="stylesheet" href="css/responsive.css" />
+    <link rel="stylesheet" href="/frontend/css/common.css" />
+    <link rel="stylesheet" href="/frontend/css/dashboard.css" />
+    <link rel="stylesheet" href="/frontend/css/responsive.css" />
 
-    <!-- Icons -->
+    <!-- Font Awesome -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -19,7 +19,7 @@
     <!-- Sui Wallet -->
     <script src="https://unpkg.com/@mysten/wallet-standard@latest/dist/index.umd.js"></script>
   </head>
-  <body data-page="dashboard">
+  <body>
     <!-- Navigation -->
     <nav class="navbar">
       <div class="navbar-container">
@@ -55,19 +55,24 @@
           <div class="wallet-info">
             <div class="wallet-status">
               <span class="status-dot connected"></span>
-              <span id="walletAddress">0x1234...abcd</span>
+              <span id="walletAddressDisplay">Đang kết nối...</span>
             </div>
           </div>
+
           <div class="user-dropdown">
             <button class="user-btn">
               <i class="fas fa-user-circle"></i>
-              <span>User</span>
+              <span id="userName">User</span>
               <i class="fas fa-chevron-down"></i>
             </button>
             <div class="dropdown-menu">
-              <a href="settings.html"><i class="fas fa-cog"></i> Cài đặt</a>
+              <a href="settings.html">
+                <i class="fas fa-cog"></i>
+                Cài đặt
+              </a>
               <button id="logoutBtn">
-                <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                <i class="fas fa-sign-out-alt"></i>
+                Đăng xuất
               </button>
             </div>
           </div>
@@ -84,17 +89,22 @@
       <div class="container">
         <!-- Page Header -->
         <div class="page-header">
-          <h1 class="page-title">Dashboard</h1>
+          <div class="header-left">
+            <h1 class="page-title">Dashboard</h1>
+            <p class="welcome-message" id="welcomeMessage">
+              Xin chào, <span id="userGreeting">Người dùng</span>!
+            </p>
+          </div>
           <div class="page-actions">
             <button
-              class="btn-primary"
+              class="btn btn-primary"
               onclick="window.location.href='create-medical-record.html'"
             >
               <i class="fas fa-plus"></i>
               Tạo bệnh án
             </button>
             <button
-              class="btn-secondary"
+              class="btn btn-secondary"
               onclick="window.location.href='create-prescription.html'"
             >
               <i class="fas fa-prescription"></i>
@@ -106,47 +116,59 @@
         <!-- Stats Cards -->
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="stat-icon">
+            <div class="stat-icon medical">
               <i class="fas fa-file-medical"></i>
             </div>
             <div class="stat-content">
               <h3 class="stat-value" id="totalRecords">0</h3>
-              <p class="stat-label">Bệnh án</p>
+              <p class="stat-label">Tổng bệnh án</p>
             </div>
-            <a href="medical-records.html" class="stat-link">Xem tất cả →</a>
+            <a href="medical-records.html" class="stat-link">
+              Xem tất cả
+              <i class="fas fa-arrow-right"></i>
+            </a>
           </div>
 
           <div class="stat-card">
-            <div class="stat-icon">
+            <div class="stat-icon prescription">
               <i class="fas fa-prescription-bottle-medical"></i>
             </div>
             <div class="stat-content">
               <h3 class="stat-value" id="totalPrescriptions">0</h3>
-              <p class="stat-label">Đơn thuốc</p>
+              <p class="stat-label">Tổng đơn thuốc</p>
             </div>
-            <a href="prescriptions.html" class="stat-link">Xem tất cả →</a>
+            <a href="prescriptions.html" class="stat-link">
+              Xem tất cả
+              <i class="fas fa-arrow-right"></i>
+            </a>
           </div>
 
           <div class="stat-card">
-            <div class="stat-icon">
+            <div class="stat-icon appointment">
               <i class="fas fa-calendar-check"></i>
             </div>
             <div class="stat-content">
               <h3 class="stat-value" id="upcomingAppointments">0</h3>
-              <p class="stat-label">Lịch hẹn</p>
+              <p class="stat-label">Lịch hẹn sắp tới</p>
             </div>
-            <a href="appointments.html" class="stat-link">Xem tất cả →</a>
+            <a href="appointments.html" class="stat-link">
+              Xem tất cả
+              <i class="fas fa-arrow-right"></i>
+            </a>
           </div>
 
           <div class="stat-card">
-            <div class="stat-icon">
+            <div class="stat-icon doctor">
               <i class="fas fa-user-md"></i>
             </div>
             <div class="stat-content">
-              <h3 class="stat-value" id="totalDoctors">0</h3>
-              <p class="stat-label">Bác sĩ</p>
+              <h3 class="stat-value" id="availableDoctors">0</h3>
+              <p class="stat-label">Bác sĩ có sẵn</p>
             </div>
-            <a href="doctors.html" class="stat-link">Xem tất cả →</a>
+            <a href="doctors.html" class="stat-link">
+              Xem tất cả
+              <i class="fas fa-arrow-right"></i>
+            </a>
           </div>
         </div>
 
@@ -155,22 +177,31 @@
           <div class="content-card">
             <div class="card-header">
               <h3>Bệnh án gần đây</h3>
-              <a href="medical-records.html" class="btn-text">Xem tất cả</a>
+              <a href="medical-records.html" class="btn-text">
+                Xem tất cả
+                <i class="fas fa-arrow-right"></i>
+              </a>
             </div>
             <div class="card-body">
               <div class="table-responsive">
                 <table class="data-table" id="recentRecordsTable">
                   <thead>
                     <tr>
-                      <th>Mã BA</th>
+                      <th>Mã bệnh án</th>
                       <th>Bệnh nhân</th>
                       <th>Chẩn đoán</th>
-                      <th>Ngày</th>
-                      <th>Hành động</th>
+                      <th>Ngày khám</th>
+                      <th class="text-center">Hành động</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <!-- Load by JS -->
+                    <!-- Will be populated by JavaScript -->
+                    <tr class="empty-row">
+                      <td colspan="5" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox"></i>
+                        Chưa có bệnh án nào
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -180,22 +211,31 @@
           <div class="content-card">
             <div class="card-header">
               <h3>Đơn thuốc gần đây</h3>
-              <a href="prescriptions.html" class="btn-text">Xem tất cả</a>
+              <a href="prescriptions.html" class="btn-text">
+                Xem tất cả
+                <i class="fas fa-arrow-right"></i>
+              </a>
             </div>
             <div class="card-body">
               <div class="table-responsive">
                 <table class="data-table" id="recentPrescriptionsTable">
                   <thead>
                     <tr>
-                      <th>Mã ĐT</th>
+                      <th>Mã đơn</th>
                       <th>Bệnh nhân</th>
                       <th>Thuốc</th>
-                      <th>Ngày</th>
-                      <th>Hành động</th>
+                      <th>Ngày kê</th>
+                      <th class="text-center">Hành động</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <!-- Load by JS -->
+                    <!-- Will be populated by JavaScript -->
+                    <tr class="empty-row">
+                      <td colspan="5" class="text-center text-muted py-4">
+                        <i class="fas fa-prescription-bottle"></i>
+                        Chưa có đơn thuốc nào
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -212,8 +252,9 @@
               onclick="window.location.href='create-medical-record.html'"
             >
               <i class="fas fa-file-medical"></i>
-              <span>Tạo bệnh án</span>
+              <span>Tạo bệnh án mới</span>
             </button>
+
             <button
               class="action-btn"
               onclick="window.location.href='create-prescription.html'"
@@ -221,6 +262,7 @@
               <i class="fas fa-prescription-bottle"></i>
               <span>Kê đơn thuốc</span>
             </button>
+
             <button
               class="action-btn"
               onclick="window.location.href='appointments.html?action=create'"
@@ -228,6 +270,7 @@
               <i class="fas fa-calendar-plus"></i>
               <span>Đặt lịch hẹn</span>
             </button>
+
             <button
               class="action-btn"
               onclick="window.location.href='doctors.html'"
@@ -235,6 +278,18 @@
               <i class="fas fa-search"></i>
               <span>Tìm bác sĩ</span>
             </button>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="recent-activity">
+          <h3 class="mb-3">Hoạt động gần đây</h3>
+          <div class="activity-list" id="activityList">
+            <div class="empty-state">
+              <i class="fas fa-history"></i>
+              <h4>Chưa có hoạt động nào</h4>
+              <p>Bắt đầu bằng cách tạo bệnh án hoặc kê đơn thuốc đầu tiên</p>
+            </div>
           </div>
         </div>
       </div>
@@ -249,39 +304,33 @@
             <span>MediChain</span>
           </div>
           <p class="footer-copyright">
-            © 2024 MediChain. Built on Sui Blockchain.
+            © 2024 MediChain. Được xây dựng trên Sui Blockchain.
           </p>
           <div class="footer-links">
-            <a href="#"><i class="fab fa-github"></i></a>
-            <a href="#"><i class="fas fa-question-circle"></i></a>
-            <a href="#"><i class="fas fa-envelope"></i></a>
+            <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
+            <a href="#" title="Trợ giúp"
+              ><i class="fas fa-question-circle"></i
+            ></a>
+            <a href="#" title="Liên hệ"><i class="fas fa-envelope"></i></a>
           </div>
         </div>
       </div>
     </footer>
 
-    <!-- Modals -->
-    <div id="modalContainer"></div>
-
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
       <div class="spinner"></div>
-      <p>Đang tải...</p>
+      <p class="loading-text">Đang tải dữ liệu...</p>
     </div>
 
-    <!-- Notification -->
-    <div id="notification" class="notification"></div>
-
     <!-- Scripts -->
-    <script src="js/config.js"></script>
-    <script src="js/wallet.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/main.js"></script>
+    <script src="/frontend/js/config.js"></script>
+    <script src="/frontend/js/wallet.js"></script>
+    <script src="/frontend/js/main.js"></script>
 
     <script>
-      // Dashboard specific logic
-      document.addEventListener("DOMContentLoaded", function () {
+      // Check authentication on page load
+      document.addEventListener("DOMContentLoaded", async function () {
         // Check wallet connection
         const walletData = localStorage.getItem("medichain_wallet");
         if (!walletData) {
@@ -291,44 +340,217 @@
 
         try {
           const wallet = JSON.parse(walletData);
-          const addressEl = document.getElementById("walletAddress");
-          if (addressEl && wallet.address) {
-            const addr = wallet.address;
-            addressEl.textContent = `${addr.substring(0, 8)}...${addr.substring(
-              addr.length - 4
-            )}`;
+
+          // Update UI with wallet info
+          const addressDisplay = document.getElementById(
+            "walletAddressDisplay"
+          );
+          const userGreeting = document.getElementById("userGreeting");
+
+          if (addressDisplay) {
+            const shortAddress = `${wallet.address.substring(
+              0,
+              6
+            )}...${wallet.address.substring(wallet.address.length - 4)}`;
+            addressDisplay.textContent = shortAddress;
           }
+
+          if (userGreeting) {
+            // You could fetch user name from contract here
+            userGreeting.textContent = `0x${wallet.address.substring(2, 6)}`;
+          }
+
+          // Load dashboard data
+          await loadDashboardData();
         } catch (error) {
-          console.error("Error parsing wallet:", error);
+          console.error("Error loading dashboard:", error);
+          showNotification("Lỗi tải dữ liệu. Vui lòng thử lại.", "error");
+          localStorage.removeItem("medichain_wallet");
+          window.location.href = "index.html";
         }
 
-        // Logout
+        // Setup event listeners
+        setupEventListeners();
+      });
+
+      async function loadDashboardData() {
+        const overlay = document.getElementById("loadingOverlay");
+        overlay.style.display = "flex";
+
+        try {
+          // Simulate API calls (replace with actual contract calls)
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          // Update stats with mock data
+          document.getElementById("totalRecords").textContent = "12";
+          document.getElementById("totalPrescriptions").textContent = "8";
+          document.getElementById("upcomingAppointments").textContent = "3";
+          document.getElementById("availableDoctors").textContent = "5";
+
+          // Populate recent records table
+          populateRecentRecords();
+
+          // Populate recent prescriptions table
+          populateRecentPrescriptions();
+
+          // Populate activity list
+          populateActivityList();
+        } catch (error) {
+          console.error("Error loading data:", error);
+          showNotification(
+            "Không thể tải dữ liệu. Vui lòng kiểm tra kết nối.",
+            "error"
+          );
+        } finally {
+          overlay.style.display = "none";
+        }
+      }
+
+      function populateRecentRecords() {
+        const tbody = document.querySelector("#recentRecordsTable tbody");
+        const emptyRow = tbody.querySelector(".empty-row");
+
+        if (emptyRow) {
+          emptyRow.remove();
+        }
+
+        // Mock data - replace with actual contract data
+        const mockRecords = [
+          {
+            id: "MR-2024-001",
+            patient: "Nguyễn Văn A",
+            diagnosis: "Viêm họng cấp",
+            date: "15/01/2024",
+          },
+          {
+            id: "MR-2024-002",
+            patient: "Trần Thị B",
+            diagnosis: "Cảm cúm",
+            date: "14/01/2024",
+          },
+          {
+            id: "MR-2024-003",
+            patient: "Lê Văn C",
+            diagnosis: "Đau dạ dày",
+            date: "13/01/2024",
+          },
+        ];
+
+        mockRecords.forEach((record) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${record.id}</td>
+                    <td>${record.patient}</td>
+                    <td>${record.diagnosis}</td>
+                    <td>${record.date}</td>
+                    <td class="actions">
+                        <button class="btn btn-small btn-primary" onclick="viewRecord('${record.id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+          tbody.appendChild(row);
+        });
+      }
+
+      function populateRecentPrescriptions() {
+        const tbody = document.querySelector("#recentPrescriptionsTable tbody");
+        const emptyRow = tbody.querySelector(".empty-row");
+
+        if (emptyRow) {
+          emptyRow.remove();
+        }
+
+        // Mock data - replace with actual contract data
+        const mockPrescriptions = [
+          {
+            id: "RX-2024-001",
+            patient: "Nguyễn Văn A",
+            medication: "Paracetamol",
+            date: "15/01/2024",
+          },
+          {
+            id: "RX-2024-002",
+            patient: "Trần Thị B",
+            medication: "Amoxicillin",
+            date: "14/01/2024",
+          },
+        ];
+
+        mockPrescriptions.forEach((pres) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${pres.id}</td>
+                    <td>${pres.patient}</td>
+                    <td>${pres.medication}</td>
+                    <td>${pres.date}</td>
+                    <td class="actions">
+                        <button class="btn btn-small btn-primary" onclick="viewPrescription('${pres.id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+          tbody.appendChild(row);
+        });
+      }
+
+      function populateActivityList() {
+        const activityList = document.getElementById("activityList");
+        const emptyState = activityList.querySelector(".empty-state");
+
+        if (emptyState) {
+          emptyState.remove();
+        }
+
+        // Mock activities
+        const activities = [
+          {
+            icon: "file-medical",
+            title: "Tạo bệnh án mới",
+            desc: "MR-2024-003 cho Lê Văn C",
+            time: "2 giờ trước",
+          },
+          {
+            icon: "prescription-bottle",
+            title: "Kê đơn thuốc",
+            desc: "RX-2024-002 cho Trần Thị B",
+            time: "1 ngày trước",
+          },
+          {
+            icon: "user-md",
+            title: "Đăng ký bác sĩ",
+            desc: "Dr. Nguyễn Thị D",
+            time: "2 ngày trước",
+          },
+        ];
+
+        activities.forEach((activity) => {
+          const item = document.createElement("div");
+          item.className = "activity-item";
+          item.innerHTML = `
+                    <div class="activity-icon">
+                        <i class="fas fa-${activity.icon}"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">${activity.title}</div>
+                        <div class="activity-desc">${activity.desc}</div>
+                    </div>
+                    <div class="activity-time">${activity.time}</div>
+                `;
+          activityList.appendChild(item);
+        });
+      }
+
+      function setupEventListeners() {
+        // Logout button
         document
           .getElementById("logoutBtn")
           .addEventListener("click", function () {
-            localStorage.removeItem("medichain_wallet");
-            window.location.href = "index.html";
-          });
-
-        // Load dashboard data
-        loadDashboardData();
-
-        // Navbar toggle for mobile
-        document
-          .querySelector(".navbar-toggle")
-          .addEventListener("click", function () {
-            document.querySelector(".navbar-menu").classList.toggle("show");
-          });
-
-        // Close dropdown when clicking outside
-        document.addEventListener("click", function (event) {
-          const dropdowns = document.querySelectorAll(".dropdown-menu.show");
-          dropdowns.forEach((dropdown) => {
-            if (!dropdown.parentElement.contains(event.target)) {
-              dropdown.classList.remove("show");
+            if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+              localStorage.removeItem("medichain_wallet");
+              window.location.href = "/index.html";
             }
           });
-        });
 
         // User dropdown
         document
@@ -337,143 +559,52 @@
             e.stopPropagation();
             this.nextElementSibling.classList.toggle("show");
           });
-      });
 
-      async function loadDashboardData() {
-        try {
-          // Show loading
-          document.getElementById("loadingOverlay").style.display = "flex";
-
-          // Fetch data from blockchain
-          const [records, prescriptions, appointments, doctors] =
-            await Promise.all([
-              fetchMedicalRecords(),
-              fetchPrescriptions(),
-              fetchAppointments(),
-              fetchDoctors(),
-            ]);
-
-          // Update stats
-          document.getElementById("totalRecords").textContent = records.length;
-          document.getElementById("totalPrescriptions").textContent =
-            prescriptions.length;
-          document.getElementById("upcomingAppointments").textContent =
-            appointments.filter((a) => new Date(a.date) > new Date()).length;
-          document.getElementById("totalDoctors").textContent = doctors.length;
-
-          // Populate tables
-          populateRecentRecords(records.slice(0, 5));
-          populateRecentPrescriptions(prescriptions.slice(0, 5));
-        } catch (error) {
-          console.error("Error loading dashboard:", error);
-          showNotification("Lỗi tải dữ liệu: " + error.message, "error");
-        } finally {
-          document.getElementById("loadingOverlay").style.display = "none";
-        }
-      }
-
-      function populateRecentRecords(records) {
-        const tbody = document.querySelector("#recentRecordsTable tbody");
-        tbody.innerHTML = "";
-
-        records.forEach((record) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-                    <td>${record.id}</td>
-                    <td>${record.patientName}</td>
-                    <td>${record.diagnosis.substring(0, 30)}${
-            record.diagnosis.length > 30 ? "..." : ""
-          }</td>
-                    <td>${formatDate(record.date)}</td>
-                    <td>
-                        <a href="medical-record-detail.html?id=${
-                          record.id
-                        }" class="btn-small">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                    </td>
-                `;
-          tbody.appendChild(row);
+        // Close dropdown when clicking outside
+        document.addEventListener("click", function () {
+          document.querySelectorAll(".dropdown-menu.show").forEach((menu) => {
+            menu.classList.remove("show");
+          });
         });
+
+        // Navbar toggle for mobile
+        document
+          .querySelector(".navbar-toggle")
+          .addEventListener("click", function () {
+            document.querySelector(".navbar-menu").classList.toggle("show");
+          });
       }
 
-      function populateRecentPrescriptions(prescriptions) {
-        const tbody = document.querySelector("#recentPrescriptionsTable tbody");
-        tbody.innerHTML = "";
-
-        prescriptions.forEach((pres) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-                    <td>${pres.id}</td>
-                    <td>${pres.patientName}</td>
-                    <td>${pres.medications[0]?.name || "N/A"}${
-            pres.medications.length > 1
-              ? " +" + (pres.medications.length - 1)
-              : ""
-          }</td>
-                    <td>${formatDate(pres.date)}</td>
-                    <td>
-                        <a href="prescription-detail.html?id=${
-                          pres.id
-                        }" class="btn-small">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                    </td>
-                `;
-          tbody.appendChild(row);
-        });
+      function viewRecord(recordId) {
+        alert(`Xem bệnh án: ${recordId}\n(Chức năng sẽ được triển khai sau)`);
+        // window.location.href = `medical-record-detail.html?id=${recordId}`;
       }
 
-      // Mock API functions
-      async function fetchMedicalRecords() {
-        return [
-          {
-            id: "MR-001",
-            patientName: "Nguyễn Văn A",
-            diagnosis: "Viêm họng cấp",
-            date: "2024-01-15",
-          },
-          {
-            id: "MR-002",
-            patientName: "Trần Thị B",
-            diagnosis: "Cảm cúm",
-            date: "2024-01-14",
-          },
-        ];
-      }
-
-      async function fetchPrescriptions() {
-        return [
-          {
-            id: "RX-001",
-            patientName: "Nguyễn Văn A",
-            medications: [{ name: "Paracetamol" }],
-            date: "2024-01-15",
-          },
-        ];
-      }
-
-      async function fetchAppointments() {
-        return [];
-      }
-
-      async function fetchDoctors() {
-        return [];
-      }
-
-      function formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString("vi-VN");
+      function viewPrescription(prescriptionId) {
+        alert(
+          `Xem đơn thuốc: ${prescriptionId}\n(Chức năng sẽ được triển khai sau)`
+        );
+        // window.location.href = `prescription-detail.html?id=${prescriptionId}`;
       }
 
       function showNotification(message, type = "info") {
-        const notification = document.getElementById("notification");
-        notification.textContent = message;
-        notification.className = `notification ${type}`;
-        notification.style.display = "block";
+        // Create notification element
+        const notification = document.createElement("div");
+        notification.className = `alert alert-${type}`;
+        notification.innerHTML = `
+                <i class="fas fa-${
+                  type === "error" ? "exclamation-circle" : "info-circle"
+                }"></i>
+                ${message}
+            `;
 
+        // Insert at top of main content
+        const mainContent = document.querySelector(".main-content .container");
+        mainContent.insertBefore(notification, mainContent.firstChild);
+
+        // Remove after 5 seconds
         setTimeout(() => {
-          notification.style.display = "none";
+          notification.remove();
         }, 5000);
       }
     </script>

@@ -1,323 +1,214 @@
-/* landing.css - MediChain Landing Page */
+/* landing.css - Landing Page Styles */
 
-/* Page Layout */
-.login-page {
-  margin: 0;
-  padding: 0;
+.landing-page {
+  background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  padding: 2rem;
 }
 
-.login-container {
+.landing-container {
+  max-width: 1000px;
   width: 100%;
-  max-width: 500px;
-  padding: 20px;
 }
 
-/* Login Card */
-.login-card {
-  background: white;
-  border-radius: 20px;
-  padding: 50px 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+/* Hero Section */
+.hero-section {
   text-align: center;
+  color: white;
+  margin-bottom: 4rem;
 }
 
-/* Logo Section */
-.logo {
-  margin-bottom: 40px;
+.hero-logo {
+  margin-bottom: 2rem;
 }
 
 .logo-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 20px;
-  margin-bottom: 20px;
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.1);
+  width: 120px;
+  height: 120px;
+  line-height: 120px;
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.hero-section h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  background: linear-gradient(to right, #ffffff, #f8f9fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-tagline {
+  font-size: 1.25rem;
+  opacity: 0.9;
+  margin-bottom: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-description {
+  font-size: 1.1rem;
+  opacity: 0.8;
+  max-width: 700px;
+  margin: 0 auto 3rem;
+  line-height: 1.8;
+}
+
+/* Features Grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+.feature-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  text-align: center;
   color: white;
+  transition: all 0.3s ease;
 }
 
-.logo-icon svg {
-  width: 48px;
-  height: 48px;
-}
-
-.logo h1 {
-  font-size: 32px;
-  font-weight: bold;
-  color: #333;
-  margin: 10px 0;
-}
-
-.logo .subtitle {
-  color: #666;
-  font-size: 16px;
-  margin: 5px 0 0 0;
-}
-
-/* Features */
-.features {
-  margin: 40px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.feature {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  text-align: left;
-  padding: 15px;
-  border-radius: 12px;
-  background: #f8f9ff;
-  transition: all 0.3s;
-}
-
-.feature:hover {
-  transform: translateX(5px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+.feature-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .feature-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 12px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  flex-shrink: 0;
+  margin: 0 auto 1.5rem;
+  font-size: 1.75rem;
 }
 
-.feature-icon.blue {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.feature-icon.medical-record {
+  background: linear-gradient(135deg, #4361ee, #3a56d4);
 }
 
-.feature-icon.green {
-  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+.feature-icon.prescription {
+  background: linear-gradient(135deg, #7209b7, #5a08a3);
 }
 
-.feature-icon.purple {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+.feature-icon.appointment {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
 }
 
-.feature h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 5px 0;
+.feature-icon.share {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
 }
 
-.feature p {
-  font-size: 14px;
-  color: #666;
-  margin: 0;
-}
-
-/* Buttons */
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.feature-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
   color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
 }
 
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+.feature-card p {
+  opacity: 0.8;
+  line-height: 1.6;
 }
 
-.btn-primary:active {
-  transform: translateY(0);
+/* CTA Section */
+.cta-section {
+  text-align: center;
+  padding: 3rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: var(--border-radius);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 3rem;
 }
 
-.btn-large {
-  width: 100%;
-  padding: 16px 30px;
-  margin-top: 20px;
+.cta-section h2 {
+  color: white;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
 }
 
-.btn-primary svg {
-  width: 24px;
-  height: 24px;
+.cta-section p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
 }
 
-/* Help Text */
-.help-text {
-  margin-top: 20px;
-  font-size: 14px;
-  color: #666;
-}
-
-.help-text a {
-  color: #667eea;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.help-text a:hover {
-  text-decoration: underline;
-}
-
-/* Network Info */
-.network-info {
-  margin-top: 20px;
+.cta-buttons {
   display: flex;
-  align-items: center;
+  gap: 1rem;
   justify-content: center;
-  gap: 15px;
+  margin-bottom: 2rem;
+}
+
+.wallet-info {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
 }
 
 .network-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
   background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 13px;
+  border-radius: 50px;
+  font-size: 0.8rem;
   font-weight: 600;
+  margin-left: 0.5rem;
 }
 
-.network-status {
+/* Footer */
+.landing-footer {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-logo {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  color: white;
-  font-size: 13px;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  background: #4caf50;
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-/* Loading Overlay */
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-}
-
-.loading-overlay .spinner {
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top: 4px solid white;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-overlay p {
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
   color: white;
-  margin-top: 20px;
-  font-size: 16px;
+  font-size: 1.5rem;
+  font-weight: 700;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .login-card {
-    padding: 40px 30px;
-  }
-
-  .logo h1 {
-    font-size: 28px;
-  }
-
-  .logo-icon {
-    width: 70px;
-    height: 70px;
-  }
-
-  .logo-icon svg {
-    width: 40px;
-    height: 40px;
-  }
-
-  .feature {
-    padding: 12px;
-  }
-
-  .feature-icon {
-    width: 45px;
-    height: 45px;
-    font-size: 20px;
-  }
-
-  .feature h3 {
-    font-size: 15px;
-  }
-
-  .feature p {
-    font-size: 13px;
-  }
+.footer-links {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
 }
 
-@media (max-width: 480px) {
-  .login-container {
-    padding: 10px;
-  }
+.footer-links a {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  transition: color 0.3s;
+}
 
-  .login-card {
-    padding: 30px 20px;
-    border-radius: 15px;
-  }
+.footer-links a:hover {
+  color: white;
+}
 
-  .logo h1 {
-    font-size: 24px;
-  }
-
-  .logo .subtitle {
-    font-size: 14px;
-  }
-
-  .network-info {
-    flex-direction: column;
-    gap: 10px;
-  }
+.copyright {
+  font-size: 0.9rem;
 }
