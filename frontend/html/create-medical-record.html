@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tạo Bệnh Án Mới - MediChain</title>
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <button class="back-btn" onclick="goBack()">← Quay lại</button>
+        <div class="header-title">Tạo Bệnh Án Mới</div>
+        <div class="wallet-badge" id="walletBadge">Đang kết nối...</div>
+      </div>
+
+      <!-- Form Card -->
+      <div class="form-card">
+        <div class="form-header">
+          <h2>📋 Thông tin bệnh án</h2>
+          <p>
+            Vui lòng điền đầy đủ thông tin bệnh án. Dữ liệu sẽ được lưu trữ an
+            toàn trên blockchain.
+          </p>
+        </div>
+
+        <form id="medicalRecordForm">
+          <!-- Patient Information -->
+          <div class="form-section">
+            <div class="section-title">👤 Thông tin bệnh nhân</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>ID Bệnh nhân <span class="required">*</span></label>
+                <input
+                  type="text"
+                  id="patientId"
+                  required
+                  placeholder="0x..."
+                />
+                <div class="input-hint">
+                  Object ID của bệnh nhân trên blockchain
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Họ và tên <span class="required">*</span></label>
+                <input
+                  type="text"
+                  id="patientName"
+                  required
+                  placeholder="Nguyễn Văn A"
+                />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Ngày sinh</label>
+                <input type="date" id="dateOfBirth" />
+              </div>
+              <div class="form-group">
+                <label>Giới tính</label>
+                <select id="gender">
+                  <option value="">-- Chọn --</option>
+                  <option value="male">Nam</option>
+                  <option value="female">Nữ</option>
+                  <option value="other">Khác</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Doctor Information -->
+          <div class="form-section">
+            <div class="section-title">👨‍⚕️ Thông tin bác sĩ</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>ID Bác sĩ <span class="required">*</span></label>
+                <input type="text" id="doctorId" required placeholder="0x..." />
+                <div class="input-hint">
+                  Object ID của bác sĩ trên blockchain
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Tên bác sĩ <span class="required">*</span></label>
+                <input
+                  type="text"
+                  id="doctorName"
+                  required
+                  placeholder="BS. Nguyễn Văn B"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Medical Record Details -->
+          <div class="form-section">
+            <div class="section-title">🏥 Chi tiết khám bệnh</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Ngày khám <span class="required">*</span></label>
+                <input type="date" id="visitDate" required />
+              </div>
+              <div class="form-group">
+                <label>Loại khám</label>
+                <select id="visitType">
+                  <option value="general">Khám tổng quát</option>
+                  <option value="followup">Tái khám</option>
+                  <option value="emergency">Cấp cứu</option>
+                  <option value="specialist">Chuyên khoa</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group full-width">
+              <label>Triệu chứng <span class="required">*</span></label>
+              <textarea
+                id="symptoms"
+                required
+                placeholder="Mô tả các triệu chứng của bệnh nhân..."
+              ></textarea>
+            </div>
+
+            <div class="form-group full-width">
+              <label>Chẩn đoán <span class="required">*</span></label>
+              <div class="diagnosis-list" id="diagnosisList">
+                <div class="diagnosis-item">
+                  <input
+                    type="text"
+                    placeholder="Nhập chẩn đoán..."
+                    class="diagnosis-input"
+                  />
+                </div>
+              </div>
+              <button type="button" class="add-btn" onclick="addDiagnosis()">
+                + Thêm chẩn đoán
+              </button>
+            </div>
+
+            <div class="form-group full-width">
+              <label>Điều trị / Đơn thuốc</label>
+              <textarea
+                id="treatment"
+                placeholder="Mô tả phương pháp điều trị và thuốc kê đơn..."
+              ></textarea>
+            </div>
+
+            <div class="form-group full-width">
+              <label>Ghi chú thêm</label>
+              <textarea id="notes" placeholder="Các ghi chú khác..."></textarea>
+            </div>
+          </div>
+
+          <!-- File Attachments -->
+          <div class="form-section">
+            <div class="section-title">📎 Tệp đính kèm</div>
+            <div class="form-group full-width">
+              <label>Tải lên kết quả xét nghiệm, hình ảnh X-quang, v.v.</label>
+              <div
+                class="file-upload"
+                onclick="document.getElementById('fileInput').click()"
+              >
+                <div class="file-upload-icon">📁</div>
+                <div>Nhấp để tải lên hoặc kéo thả file vào đây</div>
+                <div class="input-hint">
+                  Hỗ trợ: PDF, JPG, PNG (tối đa 10MB)
+                </div>
+                <input
+                  type="file"
+                  id="fileInput"
+                  multiple
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onchange="handleFileSelect(event)"
+                />
+              </div>
+              <div class="file-list" id="fileList"></div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="form-actions">
+            <button type="button" class="cancel-btn" onclick="goBack()">
+              Hủy bỏ
+            </button>
+            <button type="submit" class="submit-btn" id="submitBtn">
+              💾 Lưu bệnh án lên Blockchain
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-content">
+        <div class="spinner"></div>
+        <div class="loading-text">Đang xử lý giao dịch...</div>
+        <div class="loading-subtext">Vui lòng xác nhận trong Sui Wallet</div>
+      </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="success-modal" id="successModal">
+      <div class="success-content">
+        <div class="success-icon">✅</div>
+        <div class="success-title">Tạo bệnh án thành công!</div>
+        <div class="success-message">
+          Bệnh án đã được lưu trữ an toàn trên Sui Blockchain
+        </div>
+        <div class="tx-hash" id="txHash">Transaction: 0x...</div>
+        <div class="success-actions">
+          <button class="view-explorer-btn" onclick="viewOnExplorer()">
+            🔍 Xem trên Explorer
+          </button>
+          <button class="back-dashboard-btn" onclick="backToDashboard()">
+            ← Về Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- External JavaScript -->
+    <script src="medical-record.js"></script>
+  </body>
+</html>

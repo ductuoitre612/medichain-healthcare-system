@@ -1,17 +1,481 @@
-// Sui Smart Contract Configuration // TODO: Thay bằng Package ID thực tế sau
-khi deploy const PACKAGE_ID =
-"0x85bc1284ba93a8aeeaedebc0d9131dbe1189bdf91aa76131ce73f5b016e2c6ec"; //
-Registry Object IDs const PATIENT_REGISTRY_ID =
-"0x0a177d13c5a97befb5c0383bcf71272d650ae5f2a5c812588778e6e2fcaf37d9"; const
-DOCTOR_REGISTRY_ID =
-"0x5215263fc42db3a3d251bd0897290f9f35080604887a436ae2c3d899ae24f49c1"; //
-Network config const NETWORK = "testnet"; const SUI_RPC_URL =
-"https://fullnode.testnet.sui.io:443"; // Module names const MODULES = {
-PATIENT: "patient", DOCTOR: "doctor", MEDICAL_RECORD: "medical_record",
-PRESCRIPTION: "prescription", }; // Explorer URL const EXPLORER_URL =
-`https://suiscan.xyz/${NETWORK}`; // Function để tạo full function name function
-getFullFunctionName(module, functionName) { return
-`${PACKAGE_ID}::${module}::${functionName}`; } // Export cho các file khác dùng
-if (typeof module !== 'undefined' && module.exports) { module.exports = {
-PACKAGE_ID, PATIENT_REGISTRY_ID, DOCTOR_REGISTRY_ID, NETWORK, SUI_RPC_URL,
-MODULES, EXPLORER_URL, getFullFunctionName }; }
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - MediChain</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/common.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+
+    <!-- Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Sui Wallet -->
+    <script src="https://unpkg.com/@mysten/wallet-standard@latest/dist/index.umd.js"></script>
+  </head>
+  <body data-page="dashboard">
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="navbar-container">
+        <a href="dashboard.html" class="navbar-brand">
+          <i class="fas fa-shield-heart"></i>
+          <span>MediChain</span>
+        </a>
+
+        <div class="navbar-menu">
+          <a href="dashboard.html" class="nav-item active">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="medical-records.html" class="nav-item">
+            <i class="fas fa-file-medical"></i>
+            <span>Bệnh án</span>
+          </a>
+          <a href="prescriptions.html" class="nav-item">
+            <i class="fas fa-prescription-bottle-medical"></i>
+            <span>Đơn thuốc</span>
+          </a>
+          <a href="appointments.html" class="nav-item">
+            <i class="fas fa-calendar-check"></i>
+            <span>Lịch hẹn</span>
+          </a>
+          <a href="doctors.html" class="nav-item">
+            <i class="fas fa-user-md"></i>
+            <span>Bác sĩ</span>
+          </a>
+        </div>
+
+        <div class="navbar-actions">
+          <div class="wallet-info">
+            <div class="wallet-status">
+              <span class="status-dot connected"></span>
+              <span id="walletAddress">0x1234...abcd</span>
+            </div>
+          </div>
+          <div class="user-dropdown">
+            <button class="user-btn">
+              <i class="fas fa-user-circle"></i>
+              <span>User</span>
+              <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="dropdown-menu">
+              <a href="settings.html"><i class="fas fa-cog"></i> Cài đặt</a>
+              <button id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i> Đăng xuất
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button class="navbar-toggle">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+          <h1 class="page-title">Dashboard</h1>
+          <div class="page-actions">
+            <button
+              class="btn-primary"
+              onclick="window.location.href='create-medical-record.html'"
+            >
+              <i class="fas fa-plus"></i>
+              Tạo bệnh án
+            </button>
+            <button
+              class="btn-secondary"
+              onclick="window.location.href='create-prescription.html'"
+            >
+              <i class="fas fa-prescription"></i>
+              Kê đơn
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-file-medical"></i>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-value" id="totalRecords">0</h3>
+              <p class="stat-label">Bệnh án</p>
+            </div>
+            <a href="medical-records.html" class="stat-link">Xem tất cả →</a>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-prescription-bottle-medical"></i>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-value" id="totalPrescriptions">0</h3>
+              <p class="stat-label">Đơn thuốc</p>
+            </div>
+            <a href="prescriptions.html" class="stat-link">Xem tất cả →</a>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-value" id="upcomingAppointments">0</h3>
+              <p class="stat-label">Lịch hẹn</p>
+            </div>
+            <a href="appointments.html" class="stat-link">Xem tất cả →</a>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-user-md"></i>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-value" id="totalDoctors">0</h3>
+              <p class="stat-label">Bác sĩ</p>
+            </div>
+            <a href="doctors.html" class="stat-link">Xem tất cả →</a>
+          </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="content-grid">
+          <div class="content-card">
+            <div class="card-header">
+              <h3>Bệnh án gần đây</h3>
+              <a href="medical-records.html" class="btn-text">Xem tất cả</a>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="data-table" id="recentRecordsTable">
+                  <thead>
+                    <tr>
+                      <th>Mã BA</th>
+                      <th>Bệnh nhân</th>
+                      <th>Chẩn đoán</th>
+                      <th>Ngày</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Load by JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <div class="card-header">
+              <h3>Đơn thuốc gần đây</h3>
+              <a href="prescriptions.html" class="btn-text">Xem tất cả</a>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="data-table" id="recentPrescriptionsTable">
+                  <thead>
+                    <tr>
+                      <th>Mã ĐT</th>
+                      <th>Bệnh nhân</th>
+                      <th>Thuốc</th>
+                      <th>Ngày</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Load by JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <h3>Thao tác nhanh</h3>
+          <div class="action-buttons">
+            <button
+              class="action-btn"
+              onclick="window.location.href='create-medical-record.html'"
+            >
+              <i class="fas fa-file-medical"></i>
+              <span>Tạo bệnh án</span>
+            </button>
+            <button
+              class="action-btn"
+              onclick="window.location.href='create-prescription.html'"
+            >
+              <i class="fas fa-prescription-bottle"></i>
+              <span>Kê đơn thuốc</span>
+            </button>
+            <button
+              class="action-btn"
+              onclick="window.location.href='appointments.html?action=create'"
+            >
+              <i class="fas fa-calendar-plus"></i>
+              <span>Đặt lịch hẹn</span>
+            </button>
+            <button
+              class="action-btn"
+              onclick="window.location.href='doctors.html'"
+            >
+              <i class="fas fa-search"></i>
+              <span>Tìm bác sĩ</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-brand">
+            <i class="fas fa-shield-heart"></i>
+            <span>MediChain</span>
+          </div>
+          <p class="footer-copyright">
+            © 2024 MediChain. Built on Sui Blockchain.
+          </p>
+          <div class="footer-links">
+            <a href="#"><i class="fab fa-github"></i></a>
+            <a href="#"><i class="fas fa-question-circle"></i></a>
+            <a href="#"><i class="fas fa-envelope"></i></a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Modals -->
+    <div id="modalContainer"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Đang tải...</p>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/wallet.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/main.js"></script>
+
+    <script>
+      // Dashboard specific logic
+      document.addEventListener("DOMContentLoaded", function () {
+        // Check wallet connection
+        const walletData = localStorage.getItem("medichain_wallet");
+        if (!walletData) {
+          window.location.href = "index.html";
+          return;
+        }
+
+        try {
+          const wallet = JSON.parse(walletData);
+          const addressEl = document.getElementById("walletAddress");
+          if (addressEl && wallet.address) {
+            const addr = wallet.address;
+            addressEl.textContent = `${addr.substring(0, 8)}...${addr.substring(
+              addr.length - 4
+            )}`;
+          }
+        } catch (error) {
+          console.error("Error parsing wallet:", error);
+        }
+
+        // Logout
+        document
+          .getElementById("logoutBtn")
+          .addEventListener("click", function () {
+            localStorage.removeItem("medichain_wallet");
+            window.location.href = "index.html";
+          });
+
+        // Load dashboard data
+        loadDashboardData();
+
+        // Navbar toggle for mobile
+        document
+          .querySelector(".navbar-toggle")
+          .addEventListener("click", function () {
+            document.querySelector(".navbar-menu").classList.toggle("show");
+          });
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", function (event) {
+          const dropdowns = document.querySelectorAll(".dropdown-menu.show");
+          dropdowns.forEach((dropdown) => {
+            if (!dropdown.parentElement.contains(event.target)) {
+              dropdown.classList.remove("show");
+            }
+          });
+        });
+
+        // User dropdown
+        document
+          .querySelector(".user-btn")
+          .addEventListener("click", function (e) {
+            e.stopPropagation();
+            this.nextElementSibling.classList.toggle("show");
+          });
+      });
+
+      async function loadDashboardData() {
+        try {
+          // Show loading
+          document.getElementById("loadingOverlay").style.display = "flex";
+
+          // Fetch data from blockchain
+          const [records, prescriptions, appointments, doctors] =
+            await Promise.all([
+              fetchMedicalRecords(),
+              fetchPrescriptions(),
+              fetchAppointments(),
+              fetchDoctors(),
+            ]);
+
+          // Update stats
+          document.getElementById("totalRecords").textContent = records.length;
+          document.getElementById("totalPrescriptions").textContent =
+            prescriptions.length;
+          document.getElementById("upcomingAppointments").textContent =
+            appointments.filter((a) => new Date(a.date) > new Date()).length;
+          document.getElementById("totalDoctors").textContent = doctors.length;
+
+          // Populate tables
+          populateRecentRecords(records.slice(0, 5));
+          populateRecentPrescriptions(prescriptions.slice(0, 5));
+        } catch (error) {
+          console.error("Error loading dashboard:", error);
+          showNotification("Lỗi tải dữ liệu: " + error.message, "error");
+        } finally {
+          document.getElementById("loadingOverlay").style.display = "none";
+        }
+      }
+
+      function populateRecentRecords(records) {
+        const tbody = document.querySelector("#recentRecordsTable tbody");
+        tbody.innerHTML = "";
+
+        records.forEach((record) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${record.id}</td>
+                    <td>${record.patientName}</td>
+                    <td>${record.diagnosis.substring(0, 30)}${
+            record.diagnosis.length > 30 ? "..." : ""
+          }</td>
+                    <td>${formatDate(record.date)}</td>
+                    <td>
+                        <a href="medical-record-detail.html?id=${
+                          record.id
+                        }" class="btn-small">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                `;
+          tbody.appendChild(row);
+        });
+      }
+
+      function populateRecentPrescriptions(prescriptions) {
+        const tbody = document.querySelector("#recentPrescriptionsTable tbody");
+        tbody.innerHTML = "";
+
+        prescriptions.forEach((pres) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${pres.id}</td>
+                    <td>${pres.patientName}</td>
+                    <td>${pres.medications[0]?.name || "N/A"}${
+            pres.medications.length > 1
+              ? " +" + (pres.medications.length - 1)
+              : ""
+          }</td>
+                    <td>${formatDate(pres.date)}</td>
+                    <td>
+                        <a href="prescription-detail.html?id=${
+                          pres.id
+                        }" class="btn-small">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                `;
+          tbody.appendChild(row);
+        });
+      }
+
+      // Mock API functions
+      async function fetchMedicalRecords() {
+        return [
+          {
+            id: "MR-001",
+            patientName: "Nguyễn Văn A",
+            diagnosis: "Viêm họng cấp",
+            date: "2024-01-15",
+          },
+          {
+            id: "MR-002",
+            patientName: "Trần Thị B",
+            diagnosis: "Cảm cúm",
+            date: "2024-01-14",
+          },
+        ];
+      }
+
+      async function fetchPrescriptions() {
+        return [
+          {
+            id: "RX-001",
+            patientName: "Nguyễn Văn A",
+            medications: [{ name: "Paracetamol" }],
+            date: "2024-01-15",
+          },
+        ];
+      }
+
+      async function fetchAppointments() {
+        return [];
+      }
+
+      async function fetchDoctors() {
+        return [];
+      }
+
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString("vi-VN");
+      }
+
+      function showNotification(message, type = "info") {
+        const notification = document.getElementById("notification");
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.style.display = "block";
+
+        setTimeout(() => {
+          notification.style.display = "none";
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>

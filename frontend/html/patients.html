@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý bệnh nhân - MediChain</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="dashboard">
+      <!-- Sidebar (giống dashboard) -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-logo">
+            <div class="sidebar-logo-icon">⛓️</div>
+            <span>MediChain</span>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <a href="dashboard.html" class="nav-item">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            Tổng quan
+          </a>
+          <a href="patients.html" class="nav-item active">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            Bệnh nhân
+          </a>
+          <a href="doctors.html" class="nav-item">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <polyline points="17 11 19 13 23 9"></polyline>
+            </svg>
+            Bác sĩ
+          </a>
+          <a href="ehr.html" class="nav-item">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              ></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            Bệnh án điện tử
+          </a>
+          <a href="prescriptions.html" class="nav-item">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
+              ></path>
+              <path d="m9 12 2 2 4-4"></path>
+            </svg>
+            Đơn thuốc
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="wallet-info">
+            <div style="font-weight: 600">Ví Sui</div>
+            <div class="wallet-address" id="walletAddress">Loading...</div>
+          </div>
+          <button class="btn-logout" onclick="disconnectWallet()">
+            Đăng xuất
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="page-header">
+          <h1>Quản lý bệnh nhân</h1>
+          <p>Danh sách bệnh nhân trong hệ thống</p>
+        </div>
+
+        <!-- Actions -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Danh sách bệnh nhân</h2>
+            <button class="btn-primary" onclick="openAddPatientModal()">
+              + Thêm bệnh nhân mới
+            </button>
+          </div>
+
+          <!-- Search -->
+          <div style="margin-bottom: 20px">
+            <input
+              type="text"
+              class="form-input"
+              placeholder="Tìm kiếm theo tên, mã bệnh nhân..."
+              id="searchInput"
+              onkeyup="searchPatients()"
+            />
+          </div>
+
+          <!-- Table -->
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Mã BN</th>
+                  <th>Họ tên</th>
+                  <th>Ngày sinh</th>
+                  <th>Giới tính</th>
+                  <th>Số điện thoại</th>
+                  <th>Email</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody id="patientsTable">
+                <tr>
+                  <td colspan="7" style="text-align: center">
+                    Đang tải dữ liệu...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Add Patient Modal -->
+    <div id="addPatientModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title">Thêm bệnh nhân mới</h2>
+          <button class="btn-close" onclick="closeAddPatientModal()">×</button>
+        </div>
+
+        <form id="addPatientForm" onsubmit="submitAddPatient(event)">
+          <div class="form-group">
+            <label class="form-label">Họ và tên *</label>
+            <input type="text" class="form-input" id="fullName" required />
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+            <div class="form-group">
+              <label class="form-label">Mã bệnh nhân *</label>
+              <input type="text" class="form-input" id="patientId" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ngày sinh *</label>
+              <input type="date" class="form-input" id="dateOfBirth" required />
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+            <div class="form-group">
+              <label class="form-label">Giới tính *</label>
+              <select class="form-select" id="gender" required>
+                <option value="">Chọn giới tính</option>
+                <option value="Male">Nam</option>
+                <option value="Female">Nữ</option>
+                <option value="Other">Khác</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">CCCD/CMND *</label>
+              <input type="text" class="form-input" id="idNumber" required />
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+            <div class="form-group">
+              <label class="form-label">Số điện thoại *</label>
+              <input type="tel" class="form-input" id="phone" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email *</label>
+              <input type="email" class="form-input" id="email" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Địa chỉ *</label>
+            <input type="text" class="form-input" id="address" required />
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+            <div class="form-group">
+              <label class="form-label">Nhóm máu</label>
+              <select class="form-select" id="bloodType">
+                <option value="">Chọn nhóm máu</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Số điện thoại khẩn cấp</label>
+              <input type="tel" class="form-input" id="emergencyContact" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Dị ứng (nếu có)</label>
+            <textarea
+              class="form-textarea"
+              id="allergies"
+              placeholder="Ví dụ: Penicillin, Aspirin"
+            ></textarea>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              gap: 12px;
+              justify-content: flex-end;
+              margin-top: 24px;
+            "
+          >
+            <button
+              type="button"
+              class="btn-sm"
+              onclick="closeAddPatientModal()"
+              style="background: #e2e8f0; color: #1a202c"
+            >
+              Hủy
+            </button>
+            <button type="submit" class="btn-primary">Thêm bệnh nhân</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay" style="display: none">
+      <div class="spinner"></div>
+      <p>Đang xử lý trên blockchain...</p>
+    </div>
+
+    <script src="js/contracts.js"></script>
+    <script src="js/sui-wallet.js"></script>
+    <script src="js/patients.js"></script>
+    <script>
+      requireAuth();
+
+      // Load wallet info
+      const address = getCurrentWallet();
+      document.getElementById("walletAddress").textContent =
+        formatAddress(address);
+    </script>
+  </body>
+</html>

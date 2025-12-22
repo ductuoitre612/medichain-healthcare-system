@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MediChain - Hệ thống Y tế Blockchain</title>
-    <link rel="stylesheet" href="/frontend/css/styles.css" />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/frontend/css/landing.css" />
+
     <!-- Sui Wallet Standard -->
     <script src="https://unpkg.com/@mysten/wallet-standard@latest/dist/index.umd.js"></script>
   </head>
@@ -105,10 +108,42 @@
       <p>Đang kết nối ví...</p>
     </div>
 
-    <script src="js/contracts.js"></script>
-    <script src="js/sui-wallet.js"></script>
+    <!-- Error Notification -->
+    <div
+      id="errorNotification"
+      style="
+        display: none;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #ff4757;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        z-index: 10000;
+      "
+    >
+      <span id="errorMessage"></span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/wallet.js"></script>
     <script>
-      // Connect Wallet
+      // Show error notification
+      function showErrorNotification(message) {
+        const notification = document.getElementById("errorNotification");
+        const messageEl = document.getElementById("errorMessage");
+        messageEl.textContent = message;
+        notification.style.display = "block";
+
+        setTimeout(() => {
+          notification.style.display = "none";
+        }, 5000);
+      }
+
+      // Connect Wallet Button
       document
         .getElementById("connectWalletBtn")
         .addEventListener("click", async () => {
@@ -116,14 +151,35 @@
           overlay.style.display = "flex";
 
           try {
+            // Check if wallet is installed
+            if (typeof window.suiWallet === "undefined") {
+              throw new Error("Vui lòng cài đặt Sui Wallet extension trước");
+            }
+
+            // Connect wallet
             const connected = await connectWallet();
+
             if (connected) {
-              // Redirect to dashboard
-              window.location.href = "dashboard.html";
+              // Save to localStorage
+              const accounts = await window.suiWallet.getAccounts();
+              if (accounts && accounts.length > 0) {
+                localStorage.setItem("medichain_wallet", accounts[0]);
+
+                // Redirect to dashboard
+                setTimeout(() => {
+                  window.location.href = "dashboard.html";
+                }, 500);
+              } else {
+                throw new Error("Không tìm thấy tài khoản ví");
+              }
+            } else {
+              throw new Error("Kết nối ví thất bại");
             }
           } catch (error) {
             console.error("Lỗi kết nối:", error);
-            alert("Không thể kết nối ví. Vui lòng cài đặt Sui Wallet.");
+            showErrorNotification(
+              error.message || "Không thể kết nối ví. Vui lòng thử lại."
+            );
           } finally {
             overlay.style.display = "none";
           }
@@ -131,9 +187,24 @@
 
       // Check if already connected
       window.addEventListener("load", async () => {
-        const wallet = localStorage.getItem("sui_wallet_address");
+        const wallet = localStorage.getItem("medichain_wallet");
         if (wallet) {
-          window.location.href = "dashboard.html";
+          // Verify wallet is still connected
+          try {
+            if (typeof window.suiWallet !== "undefined") {
+              const accounts = await window.suiWallet.getAccounts();
+              if (accounts && accounts.length > 0) {
+                // Still connected, redirect to dashboard
+                window.location.href = "dashboard.html";
+                return;
+              }
+            }
+            // Not connected anymore, clear storage
+            localStorage.removeItem("medichain_wallet");
+          } catch (error) {
+            console.error("Error checking wallet:", error);
+            localStorage.removeItem("medichain_wallet");
+          }
         }
       });
     </script>
