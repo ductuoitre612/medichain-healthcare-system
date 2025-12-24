@@ -1,172 +1,107 @@
-// config.js - MediChain Smart Contract Configuration
+// config.js - MediChain Configuration
 
-/**
- * Smart Contract Configuration
- * Update these values after deploying your Move contracts
- */
-const CONFIG = {
-  // Package ID (from `sui client publish`)
-  PACKAGE_ID:
-    "0x85bc1284ba93a8aeeaedebc0d9131dbe1189bdf91aa76131ce73f5b016e2c6ec",
+const MEDICHAIN_CONFIG = {
+  // Network Configuration
+  NETWORK: "testnet",
+  RPC_URL: "https://fullnode.testnet.sui.io:443",
+  WS_URL: "wss://fullnode.testnet.sui.io:443",
 
-  // Registry Object IDs (shared objects created during deployment)
-  PATIENT_REGISTRY_ID:
-    "0x0a177d13c5a97befb5c0383bcf71272d650ae5f2a5c812588778e6e2fcaf37d9",
-  DOCTOR_REGISTRY_ID:
-    "0x5215263fc42db3a3d251bd0897290f9f35080604887a436ae2c3d899ae24f49c1",
+  // Wallet Configuration
+  WALLET_PREFERENCE: "slush", // 'slush' or 'sui'
 
-  // Network configuration
-  NETWORK: "testnet", // "testnet" | "mainnet" | "devnet"
-  SUI_RPC_URL: "https://fullnode.testnet.sui.io:443",
+  // Contract Addresses (Update after deployment)
+  PACKAGE_ID: "",
+  MEDICAL_RECORD_MODULE: "medical_record",
+  PATIENT_MODULE: "patient",
+  DOCTOR_MODULE: "doctor",
+  PRESCRIPTION_MODULE: "prescription",
 
-  // Module names (from your Move package)
-  MODULES: {
-    PATIENT: "patient",
-    DOCTOR: "doctor",
-    MEDICAL_RECORD: "medical_record",
-    PRESCRIPTION: "prescription",
+  // App Configuration
+  APP_NAME: "MediChain",
+  APP_VERSION: "1.0.0",
+  APP_DESCRIPTION: "Healthcare Management System on Sui Blockchain",
+
+  // API Configuration (if using backend)
+  API_BASE_URL: "http://localhost:3000/api",
+  IPFS_GATEWAY: "https://ipfs.io/ipfs/",
+
+  // Features
+  ENABLE_ZKLOGIN: false,
+  ENABLE_DEEPBOOK: false,
+  ENABLE_MULTISIG: false,
+
+  // UI Configuration
+  THEME: {
+    primary: "#4361ee",
+    secondary: "#06d6a0",
+    accent: "#f72585",
+    dark: "#1a1a2e",
   },
 
-  // Explorer URL
-  EXPLORER_URL: "https://suiscan.xyz/testnet",
+  // Test Data (for development)
+  TEST_MODE: true,
+  TEST_ACCOUNTS: [
+    {
+      address: "0xTestPatient123456789",
+      name: "Nguyễn Văn A",
+      role: "patient",
+      avatar: "PA",
+    },
+    {
+      address: "0xTestDoctor1234567890",
+      name: "BS. Trần Thị B",
+      role: "doctor",
+      avatar: "DR",
+    },
+  ],
 
-  // Gas budget (in MIST, 1 SUI = 1,000,000,000 MIST)
-  GAS_BUDGET: 10000000, // 0.01 SUI
+  // Storage
+  LOCAL_STORAGE_KEY: "medichain_app",
+  SESSION_TIMEOUT: 60 * 60 * 1000, // 1 hour
+
+  // Logging
+  LOG_LEVEL: "debug", // 'debug', 'info', 'warn', 'error'
+
+  // Security
+  ENCRYPTION_ENABLED: true,
+  SALT_ROUNDS: 10,
 };
 
-/**
- * Get full function name for Move call
- * @param {string} module - Module name (e.g., "patient", "medical_record")
- * @param {string} functionName - Function name (e.g., "create_patient")
- * @returns {string} - Full function name (e.g., "0x123::patient::create_patient")
- */
-function getFullFunctionName(module, functionName) {
-  return `${CONFIG.PACKAGE_ID}::${module}::${functionName}`;
-}
+// Make config global
+window.CONFIG = MEDICHAIN_CONFIG;
 
-/**
- * Get explorer URL for transaction
- * @param {string} txDigest - Transaction digest
- * @returns {string} - Explorer URL
- */
-function getExplorerTxUrl(txDigest) {
-  return `${CONFIG.EXPLORER_URL}/tx/${txDigest}`;
-}
+// Initialize config on load
+(function initConfig() {
+  console.log(
+    `🚀 ${MEDICHAIN_CONFIG.APP_NAME} v${MEDICHAIN_CONFIG.APP_VERSION}`
+  );
+  console.log(`🌐 Network: ${MEDICHAIN_CONFIG.NETWORK}`);
+  console.log(
+    `🔧 Environment: ${
+      MEDICHAIN_CONFIG.TEST_MODE ? "Development" : "Production"
+    }`
+  );
 
-/**
- * Get explorer URL for object
- * @param {string} objectId - Object ID
- * @returns {string} - Explorer URL
- */
-function getExplorerObjectUrl(objectId) {
-  return `${CONFIG.EXPLORER_URL}/object/${objectId}`;
-}
+  // Set theme colors
+  document.documentElement.style.setProperty(
+    "--primary",
+    MEDICHAIN_CONFIG.THEME.primary
+  );
+  document.documentElement.style.setProperty(
+    "--secondary",
+    MEDICHAIN_CONFIG.THEME.secondary
+  );
+  document.documentElement.style.setProperty(
+    "--accent",
+    MEDICHAIN_CONFIG.THEME.accent
+  );
+  document.documentElement.style.setProperty(
+    "--dark",
+    MEDICHAIN_CONFIG.THEME.dark
+  );
+})();
 
-/**
- * Get explorer URL for address
- * @param {string} address - Wallet address
- * @returns {string} - Explorer URL
- */
-function getExplorerAddressUrl(address) {
-  return `${CONFIG.EXPLORER_URL}/address/${address}`;
-}
-
-/**
- * Validate configuration
- * @returns {boolean} - True if config is valid
- */
-function validateConfig() {
-  const errors = [];
-
-  if (!CONFIG.PACKAGE_ID || !CONFIG.PACKAGE_ID.startsWith("0x")) {
-    errors.push("Invalid PACKAGE_ID");
-  }
-
-  if (
-    !CONFIG.PATIENT_REGISTRY_ID ||
-    !CONFIG.PATIENT_REGISTRY_ID.startsWith("0x")
-  ) {
-    errors.push("Invalid PATIENT_REGISTRY_ID");
-  }
-
-  if (
-    !CONFIG.DOCTOR_REGISTRY_ID ||
-    !CONFIG.DOCTOR_REGISTRY_ID.startsWith("0x")
-  ) {
-    errors.push("Invalid DOCTOR_REGISTRY_ID");
-  }
-
-  if (!["testnet", "mainnet", "devnet"].includes(CONFIG.NETWORK)) {
-    errors.push("Invalid NETWORK");
-  }
-
-  if (errors.length > 0) {
-    console.error("Configuration errors:", errors);
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * Network configuration helpers
- */
-const NetworkConfig = {
-  testnet: {
-    rpcUrl: "https://fullnode.testnet.sui.io:443",
-    explorerUrl: "https://suiscan.xyz/testnet",
-    faucetUrl: "https://discord.gg/sui", // Discord faucet channel
-  },
-  mainnet: {
-    rpcUrl: "https://fullnode.mainnet.sui.io:443",
-    explorerUrl: "https://suiscan.xyz/mainnet",
-    faucetUrl: null,
-  },
-  devnet: {
-    rpcUrl: "https://fullnode.devnet.sui.io:443",
-    explorerUrl: "https://suiscan.xyz/devnet",
-    faucetUrl: "https://discord.gg/sui",
-  },
-};
-
-/**
- * Get network config
- * @returns {Object} - Network configuration
- */
-function getNetworkConfig() {
-  return NetworkConfig[CONFIG.NETWORK] || NetworkConfig.testnet;
-}
-
-/**
- * Log configuration (for debugging)
- */
-function logConfig() {
-  console.log("=== MediChain Configuration ===");
-  console.log("Network:", CONFIG.NETWORK);
-  console.log("Package ID:", CONFIG.PACKAGE_ID);
-  console.log("Patient Registry:", CONFIG.PATIENT_REGISTRY_ID);
-  console.log("Doctor Registry:", CONFIG.DOCTOR_REGISTRY_ID);
-  console.log("RPC URL:", CONFIG.SUI_RPC_URL);
-  console.log("Explorer:", CONFIG.EXPLORER_URL);
-  console.log("Modules:", CONFIG.MODULES);
-  console.log("===============================");
-}
-
-// Validate config on load
-if (!validateConfig()) {
-  console.warn("⚠️ Configuration is invalid. Please update config.js");
-}
-
-// Export for use in other files (if using modules)
+// Export for modules
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = {
-    CONFIG,
-    getFullFunctionName,
-    getExplorerTxUrl,
-    getExplorerObjectUrl,
-    getExplorerAddressUrl,
-    validateConfig,
-    getNetworkConfig,
-    logConfig,
-  };
+  module.exports = MEDICHAIN_CONFIG;
 }

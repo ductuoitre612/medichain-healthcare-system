@@ -195,7 +195,6 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <!-- Will be populated by JavaScript -->
                     <tr class="empty-row">
                       <td colspan="5" class="text-center text-muted py-4">
                         <i class="fas fa-inbox"></i>
@@ -229,7 +228,6 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <!-- Will be populated by JavaScript -->
                     <tr class="empty-row">
                       <td colspan="5" class="text-center text-muted py-4">
                         <i class="fas fa-prescription-bottle"></i>
@@ -318,7 +316,7 @@
     </footer>
 
     <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay">
+    <div id="loadingOverlay" class="loading-overlay" style="display: none">
       <div class="spinner"></div>
       <p class="loading-text">Đang tải dữ liệu...</p>
     </div>
@@ -331,16 +329,67 @@
     <script>
       // Check authentication on page load
       document.addEventListener("DOMContentLoaded", async function () {
-        // Check wallet connection
+        console.log("🎯 Dashboard loading...");
+
+        // Check wallet connection - TRY MULTIPLE FORMATS
         const walletData = localStorage.getItem("medichain_wallet");
-        if (!walletData) {
-          window.location.href = "index.html";
+        const walletAddress = localStorage.getItem("medichain_wallet_address");
+        const connected = localStorage.getItem("medichain_connected");
+        const demoMode = localStorage.getItem("medichain_demo_mode");
+
+        console.log("Checking connection:", {
+          hasWalletData: !!walletData,
+          hasAddress: !!walletAddress,
+          connected,
+          demoMode,
+        });
+
+        // Check if we have valid connection
+        let wallet = null;
+
+        if (walletData) {
+          try {
+            wallet = JSON.parse(walletData);
+            console.log("✅ Using wallet data from medichain_wallet");
+          } catch (e) {
+            console.error("Error parsing wallet data:", e);
+          }
+        }
+
+        // Fallback to new format
+        if (!wallet && walletAddress && connected === "true") {
+          wallet = {
+            address: walletAddress,
+            type:
+              localStorage.getItem("medichain_wallet_name") || "Unknown Wallet",
+            connected: true,
+          };
+          console.log("✅ Using wallet data from new format");
+        }
+
+        // Check demo mode
+        if (!wallet && demoMode === "true") {
+          wallet = {
+            address: "0xdemo1234567890abcdef1234567890abcdef1234567890",
+            type: "Demo Mode",
+            connected: true,
+            isDemo: true,
+          };
+          console.log("✅ Using demo mode");
+        }
+
+        // If no valid connection, redirect to landing
+        if (!wallet || !wallet.address) {
+          console.warn(
+            "⚠️ No valid wallet connection, redirecting to landing..."
+          );
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 1000);
           return;
         }
 
         try {
-          const wallet = JSON.parse(walletData);
-
           // Update UI with wallet info
           const addressDisplay = document.getElementById(
             "walletAddressDisplay"
@@ -348,43 +397,56 @@
           const userGreeting = document.getElementById("userGreeting");
 
           if (addressDisplay) {
-            const shortAddress = `${wallet.address.substring(
-              0,
-              6
-            )}...${wallet.address.substring(wallet.address.length - 4)}`;
+            const shortAddress = wallet.address.startsWith("0x")
+              ? `${wallet.address.substring(0, 6)}...${wallet.address.substring(
+                  wallet.address.length - 4
+                )}`
+              : `${wallet.address.substring(0, 6)}...${wallet.address.substring(
+                  wallet.address.length - 4
+                )}`;
             addressDisplay.textContent = shortAddress;
           }
 
           if (userGreeting) {
-            // You could fetch user name from contract here
-            userGreeting.textContent = `0x${wallet.address.substring(2, 6)}`;
+            if (wallet.isDemo) {
+              userGreeting.textContent = "Demo User";
+            } else {
+              userGreeting.textContent = `User ${wallet.address.substring(
+                0,
+                6
+              )}`;
+            }
           }
 
           // Load dashboard data
-          await loadDashboardData();
+          await loadDashboardData(wallet);
+
+          console.log("✅ Dashboard loaded successfully");
         } catch (error) {
           console.error("Error loading dashboard:", error);
           showNotification("Lỗi tải dữ liệu. Vui lòng thử lại.", "error");
-          localStorage.removeItem("medichain_wallet");
-          window.location.href = "index.html";
         }
 
         // Setup event listeners
         setupEventListeners();
       });
 
-      async function loadDashboardData() {
+      async function loadDashboardData(wallet) {
         const overlay = document.getElementById("loadingOverlay");
-        overlay.style.display = "flex";
+        if (overlay) overlay.style.display = "flex";
 
         try {
           // Simulate API calls (replace with actual contract calls)
           await new Promise((resolve) => setTimeout(resolve, 1000));
 
           // Update stats with mock data
-          document.getElementById("totalRecords").textContent = "12";
-          document.getElementById("totalPrescriptions").textContent = "8";
-          document.getElementById("upcomingAppointments").textContent = "3";
+          document.getElementById("totalRecords").textContent = wallet.isDemo
+            ? "5"
+            : "12";
+          document.getElementById("totalPrescriptions").textContent =
+            wallet.isDemo ? "3" : "8";
+          document.getElementById("upcomingAppointments").textContent =
+            wallet.isDemo ? "2" : "3";
           document.getElementById("availableDoctors").textContent = "5";
 
           // Populate recent records table
@@ -402,7 +464,7 @@
             "error"
           );
         } finally {
-          overlay.style.display = "none";
+          if (overlay) overlay.style.display = "none";
         }
       }
 
@@ -414,7 +476,6 @@
           emptyRow.remove();
         }
 
-        // Mock data - replace with actual contract data
         const mockRecords = [
           {
             id: "MR-2024-001",
@@ -439,16 +500,16 @@
         mockRecords.forEach((record) => {
           const row = document.createElement("tr");
           row.innerHTML = `
-                    <td>${record.id}</td>
-                    <td>${record.patient}</td>
-                    <td>${record.diagnosis}</td>
-                    <td>${record.date}</td>
-                    <td class="actions">
-                        <button class="btn btn-small btn-primary" onclick="viewRecord('${record.id}')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </td>
-                `;
+            <td>${record.id}</td>
+            <td>${record.patient}</td>
+            <td>${record.diagnosis}</td>
+            <td>${record.date}</td>
+            <td class="actions">
+              <button class="btn btn-small btn-primary" onclick="viewRecord('${record.id}')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </td>
+          `;
           tbody.appendChild(row);
         });
       }
@@ -461,7 +522,6 @@
           emptyRow.remove();
         }
 
-        // Mock data - replace with actual contract data
         const mockPrescriptions = [
           {
             id: "RX-2024-001",
@@ -480,16 +540,16 @@
         mockPrescriptions.forEach((pres) => {
           const row = document.createElement("tr");
           row.innerHTML = `
-                    <td>${pres.id}</td>
-                    <td>${pres.patient}</td>
-                    <td>${pres.medication}</td>
-                    <td>${pres.date}</td>
-                    <td class="actions">
-                        <button class="btn btn-small btn-primary" onclick="viewPrescription('${pres.id}')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </td>
-                `;
+            <td>${pres.id}</td>
+            <td>${pres.patient}</td>
+            <td>${pres.medication}</td>
+            <td>${pres.date}</td>
+            <td class="actions">
+              <button class="btn btn-small btn-primary" onclick="viewPrescription('${pres.id}')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </td>
+          `;
           tbody.appendChild(row);
         });
       }
@@ -502,7 +562,6 @@
           emptyState.remove();
         }
 
-        // Mock activities
         const activities = [
           {
             icon: "file-medical",
@@ -528,37 +587,46 @@
           const item = document.createElement("div");
           item.className = "activity-item";
           item.innerHTML = `
-                    <div class="activity-icon">
-                        <i class="fas fa-${activity.icon}"></i>
-                    </div>
-                    <div class="activity-content">
-                        <div class="activity-title">${activity.title}</div>
-                        <div class="activity-desc">${activity.desc}</div>
-                    </div>
-                    <div class="activity-time">${activity.time}</div>
-                `;
+            <div class="activity-icon">
+              <i class="fas fa-${activity.icon}"></i>
+            </div>
+            <div class="activity-content">
+              <div class="activity-title">${activity.title}</div>
+              <div class="activity-desc">${activity.desc}</div>
+            </div>
+            <div class="activity-time">${activity.time}</div>
+          `;
           activityList.appendChild(item);
         });
       }
 
       function setupEventListeners() {
         // Logout button
-        document
-          .getElementById("logoutBtn")
-          .addEventListener("click", function () {
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) {
+          logoutBtn.addEventListener("click", function () {
             if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+              // Clear all wallet data
               localStorage.removeItem("medichain_wallet");
-              window.location.href = "/index.html";
+              localStorage.removeItem("medichain_wallet_address");
+              localStorage.removeItem("medichain_wallet_name");
+              localStorage.removeItem("medichain_connected");
+              localStorage.removeItem("medichain_demo_mode");
+
+              console.log("✅ Logged out, redirecting to landing...");
+              window.location.href = "index.html";
             }
           });
+        }
 
         // User dropdown
-        document
-          .querySelector(".user-btn")
-          .addEventListener("click", function (e) {
+        const userBtn = document.querySelector(".user-btn");
+        if (userBtn) {
+          userBtn.addEventListener("click", function (e) {
             e.stopPropagation();
             this.nextElementSibling.classList.toggle("show");
           });
+        }
 
         // Close dropdown when clicking outside
         document.addEventListener("click", function () {
@@ -568,41 +636,38 @@
         });
 
         // Navbar toggle for mobile
-        document
-          .querySelector(".navbar-toggle")
-          .addEventListener("click", function () {
+        const navbarToggle = document.querySelector(".navbar-toggle");
+        if (navbarToggle) {
+          navbarToggle.addEventListener("click", function () {
             document.querySelector(".navbar-menu").classList.toggle("show");
           });
+        }
       }
 
       function viewRecord(recordId) {
         alert(`Xem bệnh án: ${recordId}\n(Chức năng sẽ được triển khai sau)`);
-        // window.location.href = `medical-record-detail.html?id=${recordId}`;
       }
 
       function viewPrescription(prescriptionId) {
         alert(
           `Xem đơn thuốc: ${prescriptionId}\n(Chức năng sẽ được triển khai sau)`
         );
-        // window.location.href = `prescription-detail.html?id=${prescriptionId}`;
       }
 
       function showNotification(message, type = "info") {
-        // Create notification element
         const notification = document.createElement("div");
         notification.className = `alert alert-${type}`;
+        notification.style.cssText =
+          "position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 15px 20px; border-radius: 8px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15);";
         notification.innerHTML = `
-                <i class="fas fa-${
-                  type === "error" ? "exclamation-circle" : "info-circle"
-                }"></i>
-                ${message}
-            `;
+          <i class="fas fa-${
+            type === "error" ? "exclamation-circle" : "info-circle"
+          }"></i>
+          ${message}
+        `;
 
-        // Insert at top of main content
-        const mainContent = document.querySelector(".main-content .container");
-        mainContent.insertBefore(notification, mainContent.firstChild);
+        document.body.appendChild(notification);
 
-        // Remove after 5 seconds
         setTimeout(() => {
           notification.remove();
         }, 5000);
