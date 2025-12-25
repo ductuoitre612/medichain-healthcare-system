@@ -1,21 +1,84 @@
-// js/wallet.js
+// js/wallet.js - Wallet Manager với đầy đủ chức năng blockchain
 class WalletManager {
   constructor() {
     this.availableWallets = [];
     this.connectedWallet = null;
     this.isConnecting = false;
     this.elements = {};
+
+    // THÊM MỚI: State cho blockchain
+    this.suiClient = null;
+    this.address = null;
+    this.balance = "0";
+    this.network = CONFIG?.CURRENT_NETWORK || "TESTNET";
+    this.isDemoMode = false;
+    this.connected = false;
+
+    this.init();
   }
 
   // Khởi tạo
-  init() {
+  async init() {
     console.log("🚀 WalletManager Initializing...");
     this.cacheElements();
+
+    // THÊM MỚI: Khởi tạo Sui Client
+    await this.initializeSuiClient();
+
     this.detectWallets();
     this.setupEventListeners();
-    this.checkExistingConnection();
+    await this.checkExistingConnection();
     this.setupAuthCallback();
+
     return this;
+  }
+
+  // THÊM MỚI: Khởi tạo Sui Client
+  async initializeSuiClient() {
+    try {
+      // Đảm bảo Sui SDK đã được load
+      if (typeof sui === "undefined") {
+        console.warn("Sui SDK chưa được load, đang thử tải...");
+        await this.loadSuiSDK();
+      }
+
+      // Khởi tạo Sui Client với config
+      const currentNetwork = CONFIG?.getCurrentNetwork
+        ? CONFIG.getCurrentNetwork()
+        : CONFIG?.NETWORKS?.[this.network];
+      const rpcUrl =
+        currentNetwork?.rpcUrl || "https://fullnode.testnet.sui.io:443";
+
+      this.suiClient = new sui.SuiClient({
+        url: rpcUrl,
+      });
+
+      console.log("✅ Sui Client initialized:", rpcUrl);
+    } catch (error) {
+      console.error("❌ Failed to initialize Sui Client:", error);
+    }
+  }
+
+  // THÊM MỚI: Load Sui SDK từ CDN nếu cần
+  async loadSuiSDK() {
+    return new Promise((resolve, reject) => {
+      if (typeof sui !== "undefined") {
+        resolve();
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/@mysten/sui.js/dist/index.umd.js";
+      script.onload = () => {
+        console.log("✅ Sui SDK loaded from CDN");
+        resolve();
+      };
+      script.onerror = () => {
+        console.error("❌ Failed to load Sui SDK");
+        reject(new Error("Không thể load Sui SDK"));
+      };
+      document.head.appendChild(script);
+    });
   }
 
   // Cache DOM elements
@@ -97,7 +160,7 @@ class WalletManager {
     return this.availableWallets;
   }
 
-  // Kết nối wallet
+  // Kết nối wallet - THÊM Sui Client
   async connect(walletIndex) {
     if (this.isConnecting) return;
 
@@ -132,10 +195,24 @@ class WalletManager {
       const address = accounts[0];
       this.connectedWallet = { ...wallet, address };
 
+      // THÊM MỚI: Cập nhật state blockchain
+      this.address = address;
+      this.connected = true;
+      this.isDemoMode = false;
+
       console.log(`✅ Connected: ${address}`);
+
+      // THÊM MỚI: Cập nhật balance
+      await this.updateBalance();
+
+      // THÊM MỚI: Bắt đầu polling balance
+      this.startBalancePolling();
 
       this.handleSuccessfulConnection(address, wallet.name);
       this.showSuccessModal(address, wallet.name);
+
+      // THÊM MỚI: Dispatch event
+      this.dispatchWalletConnectedEvent();
 
       // Auto redirect
       setTimeout(() => {
@@ -150,646 +227,153 @@ class WalletManager {
     }
   }
 
-  // MỚI: Mở Slush App để đăng ký/kết nối
-  launchSlushApp() {
-    console.log("🚀 Launching Slush App...");
-
-    // Đóng modal nếu đang mở
-    const modal = document.querySelector(".app-connection-modal");
-    if (modal) modal.remove();
-
-    // Hiển thị hướng dẫn thay vì redirect
-    this.showSlushInstructions();
-  }
-
-  // MỚI: Hiển thị hướng dẫn kết nối với Slush
-  showSlushInstructions() {
-    const instructionHtml = `
-      <div class="app-connection-modal" style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-        animation: fadeIn 0.3s ease;
-      ">
-        <div style="
-          background: white;
-          border-radius: 20px;
-          padding: 40px;
-          max-width: 550px;
-          width: 90%;
-          text-align: center;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-          position: relative;
-          max-height: 90vh;
-          overflow-y: auto;
-        ">
-          <button onclick="this.closest('.app-connection-modal').remove()"
-                  style="
-                    position: absolute;
-                    top: 20px;
-                    right: 20px;
-                    background: none;
-                    border: none;
-                    font-size: 28px;
-                    color: #9ca3af;
-                    cursor: pointer;
-                    line-height: 1;
-                  ">
-            ×
-          </button>
-          
-          <div style="margin-bottom: 30px;">
-            <div style="
-              width: 80px;
-              height: 80px;
-              margin: 0 auto 20px;
-              background: linear-gradient(135deg, #6366f1, #4f46e5);
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            ">
-              <i class="fas fa-info-circle" style="font-size: 36px; color: white;"></i>
-            </div>
-            <h2 style="margin: 10px 0; color: #1f2937; font-size: 24px; font-weight: 600;">Cách Kết nối với Slush</h2>
-            <p style="color: #6b7280; font-size: 15px; line-height: 1.5;">Chọn một trong các phương án sau:</p>
-          </div>
-          
-          <div style="text-align: left; margin: 30px 0;">
-            <!-- Option 1: Extension -->
-            <div style="
-              background: #f0f9ff;
-              border: 2px solid #3b82f6;
-              border-radius: 12px;
-              padding: 20px;
-              margin-bottom: 20px;
-            ">
-              <div style="display: flex; align-items: start; gap: 15px;">
-                <div style="
-                  background: #3b82f6;
-                  color: white;
-                  width: 32px;
-                  height: 32px;
-                  border-radius: 50%;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  font-weight: 600;
-                  flex-shrink: 0;
-                ">1</div>
-                <div style="flex: 1;">
-                  <h3 style="margin: 0 0 10px 0; color: #1f2937; font-size: 18px;">
-                    <i class="fas fa-puzzle-piece" style="color: #3b82f6;"></i> 
-                    Khuyên dùng: Cài Extension
-                  </h3>
-                  <p style="margin: 0 0 15px 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
-                    Nếu bạn đã có tài khoản Slush, cài extension và đăng nhập để kết nối dễ dàng với MediChain.
-                  </p>
-                  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <a href="https://chromewebstore.google.com/detail/slush-sui-wallet/hioeanlpnkenjbhejaecmjpopolgnffl" 
-                       target="_blank"
-                       style="
-                         display: inline-flex;
-                         align-items: center;
-                         gap: 8px;
-                         padding: 10px 16px;
-                         background: #3b82f6;
-                         color: white;
-                         text-decoration: none;
-                         border-radius: 8px;
-                         font-size: 14px;
-                         font-weight: 600;
-                       ">
-                      <i class="fas fa-download"></i>
-                      Cài Extension
-                    </a>
-                    <button onclick="window.walletManager.recheckExtensions()"
-                            style="
-                              display: inline-flex;
-                              align-items: center;
-                              gap: 8px;
-                              padding: 10px 16px;
-                              background: white;
-                              color: #3b82f6;
-                              border: 2px solid #3b82f6;
-                              border-radius: 8px;
-                              font-size: 14px;
-                              font-weight: 600;
-                              cursor: pointer;
-                            ">
-                      <i class="fas fa-sync"></i>
-                      Đã cài, kiểm tra lại
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Option 2: Manual Entry -->
-            <div style="
-              background: #f9fafb;
-              border: 2px solid #e5e7eb;
-              border-radius: 12px;
-              padding: 20px;
-              margin-bottom: 20px;
-            ">
-              <div style="display: flex; align-items: start; gap: 15px;">
-                <div style="
-                  background: #6b7280;
-                  color: white;
-                  width: 32px;
-                  height: 32px;
-                  border-radius: 50%;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  font-weight: 600;
-                  flex-shrink: 0;
-                ">2</div>
-                <div style="flex: 1;">
-                  <h3 style="margin: 0 0 10px 0; color: #1f2937; font-size: 18px;">
-                    <i class="fas fa-keyboard" style="color: #6b7280;"></i> 
-                    Nhập địa chỉ ví thủ công
-                  </h3>
-                  <p style="margin: 0 0 15px 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
-                    Copy địa chỉ ví từ Slush App và nhập vào đây để kết nối nhanh.
-                  </p>
-                  <div style="display: flex; gap: 10px;">
-                    <input type="text" 
-                           id="manualWalletAddress" 
-                           placeholder="0x..."
-                           style="
-                             flex: 1;
-                             padding: 10px 12px;
-                             border: 2px solid #e5e7eb;
-                             border-radius: 8px;
-                             font-size: 14px;
-                             font-family: monospace;
-                           ">
-                    <button onclick="window.walletManager.connectManualWallet()"
-                            style="
-                              padding: 10px 20px;
-                              background: #6b7280;
-                              color: white;
-                              border: none;
-                              border-radius: 8px;
-                              font-size: 14px;
-                              font-weight: 600;
-                              cursor: pointer;
-                              white-space: nowrap;
-                            ">
-                      <i class="fas fa-check"></i> Kết nối
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Option 3: Slush Web -->
-            <div style="
-              background: #f9fafb;
-              border: 2px solid #e5e7eb;
-              border-radius: 12px;
-              padding: 20px;
-            ">
-              <div style="display: flex; align-items: start; gap: 15px;">
-                <div style="
-                  background: #6b7280;
-                  color: white;
-                  width: 32px;
-                  height: 32px;
-                  border-radius: 50%;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  font-weight: 600;
-                  flex-shrink: 0;
-                ">3</div>
-                <div style="flex: 1;">
-                  <h3 style="margin: 0 0 10px 0; color: #1f2937; font-size: 18px;">
-                    <i class="fas fa-external-link-alt" style="color: #6b7280;"></i> 
-                    Tạo ví mới trên Slush
-                  </h3>
-                  <p style="margin: 0 0 15px 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
-                    Nếu chưa có ví, tạo tài khoản mới trên Slush Web App, sau đó quay lại và nhập địa chỉ ví.
-                  </p>
-                  <a href="https://slush.app/" 
-                     target="_blank"
-                     style="
-                       display: inline-flex;
-                       align-items: center;
-                       gap: 8px;
-                       padding: 10px 16px;
-                       background: white;
-                       color: #6b7280;
-                       text-decoration: none;
-                       border: 2px solid #e5e7eb;
-                       border-radius: 8px;
-                       font-size: 14px;
-                       font-weight: 600;
-                     ">
-                    <i class="fas fa-external-link-alt"></i>
-                    Mở Slush Web
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div style="
-            background: #fffbeb;
-            border: 1px solid #fbbf24;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-            text-align: left;
-          ">
-            <p style="margin: 0; color: #92400e; font-size: 13px; line-height: 1.6;">
-              <i class="fas fa-lightbulb" style="color: #fbbf24;"></i> 
-              <strong>Mẹo:</strong> Sau khi cài extension hoặc có địa chỉ ví, quay lại trang này và click "Kết nối Wallet" để hoàn tất.
-            </p>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Thêm style animation nếu chưa có
-    if (!document.getElementById("modal-animation")) {
-      const style = document.createElement("style");
-      style.id = "modal-animation";
-      style.textContent = `
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-
-    // Xóa modal cũ nếu có
-    const oldModal = document.querySelector(".app-connection-modal");
-    if (oldModal) oldModal.remove();
-
-    // Thêm modal vào DOM
-    const modalContainer = document.createElement("div");
-    modalContainer.innerHTML = instructionHtml;
-    document.body.appendChild(modalContainer.firstElementChild);
-  }
-
-  // MỚI: Kết nối ví thủ công
-  connectManualWallet() {
-    const input = document.getElementById("manualWalletAddress");
-    const address = input ? input.value.trim() : "";
-
-    if (!address) {
-      alert("Vui lòng nhập địa chỉ ví");
-      return;
-    }
-
-    // Validate địa chỉ Sui (bắt đầu với 0x và có độ dài phù hợp)
-    if (!address.startsWith("0x") || address.length < 40) {
-      alert("Địa chỉ ví không hợp lệ. Địa chỉ Sui phải bắt đầu với 0x");
-      return;
-    }
-
-    console.log("✅ Manual wallet connection:", address);
-
-    // Đóng modal
-    const modal = document.querySelector(".app-connection-modal");
-    if (modal) modal.remove();
-
-    // Lưu kết nối
-    this.handleSuccessfulConnection(address, "Slush Wallet (Manual)");
-    this.showSuccessModal(address, "Slush Wallet");
-
-    // Redirect sau 2 giây
-    setTimeout(() => {
-      window.location.href = "dashboard.html";
-    }, 2000);
-  }
-
-  // MỚI: Kiểm tra lại extension sau khi cài
-  recheckExtensions() {
-    console.log("🔄 Rechecking extensions...");
-
-    // Đóng modal hiện tại
-    const modal = document.querySelector(".app-connection-modal");
-    if (modal) modal.remove();
-
-    // Detect lại wallets
-    this.detectWallets();
-
-    // Nếu tìm thấy wallets, hiển thị modal chọn wallet
-    if (this.availableWallets.length > 0) {
-      alert(
-        `✅ Tìm thấy ${this.availableWallets.length} wallet! Đang mở danh sách...`
-      );
-      this.showExtensionWallets();
-    } else {
-      alert(
-        "⚠️ Chưa phát hiện extension nào. Vui lòng:\n1. Cài extension và đăng nhập\n2. Refresh trang (Ctrl+R)\n3. Thử lại"
-      );
-    }
-  }
-
-  // MỚI: Lắng nghe callback từ Slush App
-  startListeningForCallback() {
-    console.log("👂 Listening for callback from Slush App...");
-
-    // Check URL params mỗi 500ms
-    const checkInterval = setInterval(() => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const address = urlParams.get("address");
-      const requestId = urlParams.get("requestId");
-
-      if (address && requestId) {
-        clearInterval(checkInterval);
-
-        // Verify request ID
-        const storedRequestId = localStorage.getItem(
-          "slush_connection_request"
-        );
-        if (requestId === storedRequestId) {
-          console.log("✅ Valid callback received");
-          this.handleSlushCallback(address);
-        } else {
-          console.warn("⚠️ Invalid request ID");
-        }
+  // THÊM MỚI: Cập nhật số dư từ blockchain
+  async updateBalance() {
+    try {
+      if (!this.address || !this.suiClient) {
+        this.balance = "0";
+        return;
       }
-    }, 500);
 
-    // Stop checking after 5 minutes
-    setTimeout(() => {
-      clearInterval(checkInterval);
-    }, 300000);
+      const balance = await this.suiClient.getBalance({
+        owner: this.address,
+        coinType: "0x2::sui::SUI",
+      });
+
+      this.balance = (parseInt(balance.totalBalance) / 1_000_000_000).toFixed(
+        4
+      );
+      this.updateBalanceDisplay();
+    } catch (error) {
+      console.error("Update balance error:", error);
+      this.balance = "0.0000";
+      this.updateBalanceDisplay();
+    }
   }
 
-  // MỚI: Xử lý callback từ Slush
-  handleSlushCallback(address) {
-    console.log("🎉 Slush connected:", address);
-
-    // Lưu thông tin kết nối
-    this.handleSuccessfulConnection(address, "Slush Wallet");
-
-    // Xóa params khỏi URL
-    const cleanUrl = window.location.origin + window.location.pathname;
-    window.history.replaceState({}, document.title, cleanUrl);
-
-    // Hiển thị modal thành công
-    this.showSuccessModal(address, "Slush Wallet");
-
-    // Auto redirect sau 2 giây
-    setTimeout(() => {
-      window.location.href = "dashboard.html";
-    }, 2000);
+  // THÊM MỚI: Hiển thị số dư
+  updateBalanceDisplay() {
+    const balanceElements = document.querySelectorAll(".wallet-balance");
+    balanceElements.forEach((element) => {
+      element.textContent = `${this.balance} SUI`;
+    });
   }
 
-  // MỚI: Setup auth callback khi trang load
-  setupAuthCallback() {
-    // Check nếu có callback params trong URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const address = urlParams.get("address");
-    const requestId = urlParams.get("requestId");
+  // THÊM MỚI: Polling số dư
+  startBalancePolling() {
+    this.stopBalancePolling();
 
-    if (address && requestId) {
-      const storedRequestId = localStorage.getItem("slush_connection_request");
-      if (requestId === storedRequestId) {
-        this.handleSlushCallback(address);
+    this.balanceInterval = setInterval(() => {
+      if (this.connected && !this.isDemoMode) {
+        this.updateBalance();
       }
+    }, 30000);
+  }
+
+  stopBalancePolling() {
+    if (this.balanceInterval) {
+      clearInterval(this.balanceInterval);
+      this.balanceInterval = null;
     }
   }
 
-  // MỚI: Hiển thị modal chọn cách kết nối
-  showConnectionOptionsModal() {
-    const modalHtml = `
-      <div class="app-connection-modal" style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-        animation: fadeIn 0.3s ease;
-      ">
-        <div style="
-          background: white;
-          border-radius: 20px;
-          padding: 40px;
-          max-width: 450px;
-          width: 90%;
-          text-align: center;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-          position: relative;
-        ">
-          <button onclick="this.closest('.app-connection-modal').remove()"
-                  style="
-                    position: absolute;
-                    top: 20px;
-                    right: 20px;
-                    background: none;
-                    border: none;
-                    font-size: 28px;
-                    color: #9ca3af;
-                    cursor: pointer;
-                    line-height: 1;
-                  ">
-            ×
-          </button>
-          
-          <div style="margin-bottom: 25px;">
-            <div style="
-              width: 80px;
-              height: 80px;
-              margin: 0 auto 20px;
-              background: linear-gradient(135deg, #6366f1, #4f46e5);
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            ">
-              <i class="fas fa-wallet" style="font-size: 36px; color: white;"></i>
-            </div>
-            <h2 style="margin: 10px 0; color: #1f2937; font-size: 24px; font-weight: 600;">Kết nối Slush Wallet</h2>
-            <p style="color: #6b7280; font-size: 15px; line-height: 1.5;">Chọn cách bạn muốn kết nối với MediChain</p>
-          </div>
-          
-          <div style="margin: 30px 0; display: flex; flex-direction: column; gap: 15px;">
-            <button onclick="window.walletManager.launchSlushApp()" 
-                    style="
-                      width: 100%;
-                      padding: 20px;
-                      background: linear-gradient(135deg, #6366f1, #4f46e5);
-                      color: white;
-                      border: none;
-                      border-radius: 12px;
-                      font-size: 16px;
-                      font-weight: 600;
-                      cursor: pointer;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      gap: 12px;
-                      transition: all 0.3s;
-                      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-                    "
-                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(99, 102, 241, 0.4)'"
-                    onmouseout="this.style.transform=''; this.style.boxShadow='0 4px 12px rgba(99, 102, 241, 0.3)'">
-              <i class="fas fa-external-link-alt"></i>
-              <span>Mở Slush App (Khuyên dùng)</span>
-            </button>
-            
-            ${
-              this.availableWallets.length > 0
-                ? `
-              <div style="position: relative; text-align: center; margin: 10px 0;">
-                <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e5e7eb;"></div>
-                <span style="position: relative; background: white; padding: 0 15px; color: #9ca3af; font-size: 14px;">hoặc</span>
-              </div>
-              
-              <button onclick="window.walletManager.showExtensionWallets()"
-                      style="
-                        width: 100%;
-                        padding: 20px;
-                        background: white;
-                        color: #374151;
-                        border: 2px solid #e5e7eb;
-                        border-radius: 12px;
-                        font-size: 16px;
-                        font-weight: 600;
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 12px;
-                        transition: all 0.3s;
-                      "
-                      onmouseover="this.style.borderColor='#6366f1'; this.style.transform='translateY(-2px)'"
-                      onmouseout="this.style.borderColor='#e5e7eb'; this.style.transform=''">
-                <i class="fas fa-puzzle-piece"></i>
-                <span>Dùng Extension (${this.availableWallets.length} wallet)</span>
-              </button>
-            `
-                : `
-              <div style="
-                padding: 15px;
-                background: #f0f9ff;
-                border-radius: 8px;
-                border: 1px solid #bae6fd;
-                text-align: left;
-                margin-top: 10px;
-              ">
-                <p style="margin: 0; color: #0369a1; font-size: 14px; line-height: 1.5;">
-                  <i class="fas fa-info-circle"></i> <strong>Chưa có extension?</strong><br>
-                  Bạn có thể đăng ký và sử dụng Slush ngay trên web mà không cần cài đặt extension.
-                </p>
-              </div>
-            `
-            }
-          </div>
-          
-          <div style="
-            background: #f9fafb;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-          ">
-            <p style="margin: 0; color: #6b7280; font-size: 13px; line-height: 1.5;">
-              <i class="fas fa-shield-alt" style="color: #10b981;"></i> 
-              Thông tin ví của bạn được bảo mật và chỉ lưu trữ cục bộ
-            </p>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Thêm style animation nếu chưa có
-    if (!document.getElementById("modal-animation")) {
-      const style = document.createElement("style");
-      style.id = "modal-animation";
-      style.textContent = `
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      `;
-      document.head.appendChild(style);
+  // THÊM MỚI: Execute transaction (QUAN TRỌNG!)
+  async executeTransaction(transactionBlock) {
+    if (!this.connected) {
+      throw new Error("Vui lòng kết nối ví trước!");
     }
 
-    // Xóa modal cũ nếu có
-    const oldModal = document.querySelector(".app-connection-modal");
-    if (oldModal) oldModal.remove();
+    if (this.isDemoMode) {
+      // Mock transaction cho demo mode
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return {
+        digest: `demo_${Date.now()}`,
+        effects: { status: { status: "success" } },
+        objectChanges: [],
+        events: [],
+      };
+    }
 
-    // Thêm modal vào DOM
-    const modalContainer = document.createElement("div");
-    modalContainer.innerHTML = modalHtml;
-    document.body.appendChild(modalContainer.firstElementChild);
+    try {
+      const result =
+        await this.connectedWallet.adapter.signAndExecuteTransaction({
+          transaction: transactionBlock,
+          chain: `sui:${this.network.toLowerCase()}`,
+        });
+
+      console.log("✅ Transaction executed:", result);
+      return result;
+    } catch (error) {
+      console.error("❌ Transaction error:", error);
+      throw error;
+    }
   }
 
-  // MỚI: Hiển thị danh sách extension wallets
-  showExtensionWallets() {
-    // Đóng modal hiện tại
-    const modal = document.querySelector(".app-connection-modal");
-    if (modal) modal.remove();
+  // THÊM MỚI: Gọi Move function
+  async callMoveFunction(
+    packageId,
+    moduleName,
+    functionName,
+    args = [],
+    typeArguments = []
+  ) {
+    const tx = new sui.TransactionBlock();
 
-    // Hiển thị modal chọn wallet từ extension
-    let html = `
-      <div style="text-align: left;">
-        <h3 style="margin-bottom: 20px; color: #1f2937;">Chọn Wallet Extension</h3>
-        <p style="color: #6b7280; margin-bottom: 25px;">Các wallet đã cài đặt trên trình duyệt:</p>
-        
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-    `;
-
-    this.availableWallets.forEach((wallet, index) => {
-      html += `
-        <button onclick="window.walletManager.connect(${index})" 
-                style="display: flex; align-items: center; gap: 15px; padding: 18px; background: white; border: 2px solid #e5e7eb; border-radius: 12px; cursor: pointer; transition: all 0.3s; text-align: left; width: 100%;">
-          <div style="font-size: 28px">${wallet.icon}</div>
-          <div style="flex: 1">
-            <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;">${wallet.name}</div>
-            <div style="font-size: 14px; color: #6b7280;">Nhấn để kết nối</div>
-          </div>
-          <i class="fas fa-chevron-right" style="color: #9ca3af;"></i>
-        </button>
-      `;
+    tx.moveCall({
+      target: `${packageId}::${moduleName}::${functionName}`,
+      arguments: args.map((arg) => tx.pure(arg)),
+      typeArguments: typeArguments,
     });
 
-    html += `
-        </div>
-        
-        <button onclick="window.walletManager.showConnectionOptionsModal()"
-                style="
-                  width: 100%;
-                  margin-top: 20px;
-                  padding: 12px;
-                  background: #f3f4f6;
-                  border: none;
-                  border-radius: 8px;
-                  color: #6b7280;
-                  cursor: pointer;
-                  font-size: 14px;
-                ">
-          <i class="fas fa-arrow-left"></i> Quay lại
-        </button>
-      </div>
-    `;
+    // Set gas budget
+    const gasBudget = CONFIG?.getGasBudget
+      ? CONFIG.getGasBudget("DEFAULT")
+      : 100000000;
+    tx.setGasBudget(gasBudget);
 
-    this.elements.walletList.innerHTML = html;
-    this.elements.installWalletModal.style.display = "flex";
+    return await this.executeTransaction(tx);
   }
 
-  // Cập nhật UI sau khi kết nối
+  // THÊM MỚI: Sign message
+  async signMessage(message) {
+    if (!this.connected) {
+      throw new Error("Vui lòng kết nối ví trước!");
+    }
+
+    if (this.isDemoMode) {
+      return "demo_signature";
+    }
+
+    try {
+      const result = await this.connectedWallet.adapter.signMessage({
+        message: new TextEncoder().encode(message),
+      });
+
+      return result.signature;
+    } catch (error) {
+      console.error("❌ Sign message error:", error);
+      throw error;
+    }
+  }
+
+  // THÊM MỚI: Dispatch event
+  dispatchWalletConnectedEvent() {
+    const event = new CustomEvent("walletConnected", {
+      detail: {
+        address: this.address,
+        isDemo: this.isDemoMode,
+        balance: this.balance,
+      },
+    });
+    window.dispatchEvent(event);
+  }
+
+  dispatchWalletDisconnectedEvent() {
+    const event = new CustomEvent("walletDisconnected");
+    window.dispatchEvent(event);
+  }
+
+  // Cập nhật UI sau khi kết nối - THÊM state blockchain
   handleSuccessfulConnection(address, walletName) {
     const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
 
@@ -797,6 +381,7 @@ class WalletManager {
       this.elements.walletBadge.innerHTML = `
         <i class="fas fa-check-circle"></i>
         <span>${shortAddress}</span>
+        ${this.isDemoMode ? '<span class="demo-badge">Demo</span>' : ""}
       `;
       this.elements.walletBadge.classList.add("connected");
     }
@@ -810,31 +395,37 @@ class WalletManager {
       }
     );
 
-    // Lưu thông tin wallet theo format cũ VÀ mới để tương thích với dashboard
+    // Lưu thông tin wallet đầy đủ
     const walletData = {
       address: address,
       type: walletName,
       connected: true,
       connectedAt: new Date().toISOString(),
+      isDemo: this.isDemoMode,
+      network: this.network,
+      balance: this.balance,
     };
 
     // Format mới (hiện tại)
     localStorage.setItem("medichain_wallet_address", address);
     localStorage.setItem("medichain_wallet_name", walletName);
     localStorage.setItem("medichain_connected", "true");
+    localStorage.setItem("medichain_demo_mode", this.isDemoMode.toString());
+    localStorage.setItem("medichain_network", this.network);
 
-    // Format cũ (để dashboard đọc được)
+    // Format cũ (để tương thích)
     localStorage.setItem("medichain_wallet", JSON.stringify(walletData));
 
     console.log("✅ Wallet data saved:", walletData);
   }
 
-  // Kiểm tra kết nối cũ
-  checkExistingConnection() {
+  // Kiểm tra kết nối cũ - THÊM khởi tạo Sui Client
+  async checkExistingConnection() {
     const connected = localStorage.getItem("medichain_connected");
     const address = localStorage.getItem("medichain_wallet_address");
     const walletName = localStorage.getItem("medichain_wallet_name");
     const demoMode = localStorage.getItem("medichain_demo_mode");
+    const network = localStorage.getItem("medichain_network");
     const walletData = localStorage.getItem("medichain_wallet");
 
     console.log("🔍 Checking existing connection:", {
@@ -842,10 +433,16 @@ class WalletManager {
       address,
       walletName,
       demoMode,
+      network,
       hasWalletData: !!walletData,
     });
 
-    // Kiểm tra nếu đang ở trang landing (index.html)
+    // Set network
+    if (network) {
+      this.network = network;
+    }
+
+    // Kiểm tra nếu đang ở trang landing
     const isLandingPage =
       window.location.pathname.includes("index.html") ||
       window.location.pathname.endsWith("/") ||
@@ -855,13 +452,7 @@ class WalletManager {
     // Kiểm tra nếu đang ở trang dashboard
     const isDashboardPage = window.location.pathname.includes("dashboard.html");
 
-    console.log("📍 Page detection:", {
-      isLandingPage,
-      isDashboardPage,
-      pathname: window.location.pathname,
-    });
-
-    // Nếu có wallet data cũ nhưng không có format mới, convert sang format mới
+    // Nếu có wallet data cũ nhưng không có format mới, convert
     if (walletData && !address) {
       try {
         const wallet = JSON.parse(walletData);
@@ -878,6 +469,10 @@ class WalletManager {
 
     // Case 1: Demo mode
     if (demoMode === "true") {
+      this.isDemoMode = true;
+      this.connected = true;
+      this.address = address;
+
       if (isLandingPage) {
         console.log(
           "Demo mode detected on landing, redirecting to dashboard..."
@@ -888,13 +483,26 @@ class WalletManager {
         }, 500);
         return;
       }
-      // Nếu đang ở dashboard, không làm gì
       return;
     }
 
     // Case 2: Real wallet connection
     if (connected === "true" && address) {
       console.log("✅ Valid wallet connection found");
+
+      // THÊM: Khởi tạo Sui Client trước khi set state
+      if (!this.suiClient) {
+        await this.initializeSuiClient();
+      }
+
+      this.address = address;
+      this.connected = true;
+      this.isDemoMode = false;
+
+      // THÊM: Cập nhật balance
+      await this.updateBalance();
+      this.startBalancePolling();
+
       this.handleSuccessfulConnection(address, walletName || "Unknown Wallet");
 
       // Nếu đang ở landing page, redirect sang dashboard
@@ -905,30 +513,43 @@ class WalletManager {
           window.location.href = "dashboard.html";
         }, 500);
       }
-      // Nếu đang ở dashboard, xóa flag redirect
+
       if (isDashboardPage) {
         sessionStorage.removeItem("medichain_redirecting");
       }
     } else if (connected === "true" && !address && demoMode !== "true") {
       // Case 3: Invalid state - clear everything
       console.log("⚠️ Invalid connection state, clearing...");
-      this.clearStoredConnection(false);
+      await this.clearStoredConnection(false);
     } else {
       // Case 4: No connection
       console.log("ℹ️ No connection found");
-      // KHÔNG tự động redirect từ dashboard về landing
-      // Dashboard sẽ tự xử lý việc này
     }
   }
 
-  clearStoredConnection(showAlert = false) {
+  // Clear stored connection - THÊM stop polling
+  async clearStoredConnection(showAlert = false) {
     localStorage.removeItem("medichain_wallet_address");
     localStorage.removeItem("medichain_wallet_name");
     localStorage.removeItem("medichain_connected");
     localStorage.removeItem("medichain_demo_mode");
-    localStorage.removeItem("medichain_wallet"); // Xóa cả format cũ
+    localStorage.removeItem("medichain_network");
+    localStorage.removeItem("medichain_wallet");
     localStorage.removeItem("slush_connection_request");
     localStorage.removeItem("slush_connection_timestamp");
+
+    // Reset state
+    this.address = null;
+    this.balance = "0";
+    this.isDemoMode = false;
+    this.connected = false;
+    this.connectedWallet = null;
+
+    // Stop polling
+    this.stopBalancePolling();
+
+    // Dispatch event
+    this.dispatchWalletDisconnectedEvent();
 
     if (this.elements.walletBadge) {
       this.elements.walletBadge.innerHTML = `
@@ -953,106 +574,216 @@ class WalletManager {
     }
   }
 
-  updateWalletUI() {
-    if (this.availableWallets.length > 0) {
-      [this.elements.connectWalletBtn, this.elements.connectWalletBtn2].forEach(
-        (btn) => {
-          if (btn) {
-            btn.innerHTML = `<i class="fas fa-wallet"></i> Kết nối Wallet`;
-          }
-        }
-      );
-    }
+  // THÊM MỚI: Getter methods
+  getAddress() {
+    return this.address;
   }
 
-  showLoading() {
-    if (this.elements.loadingOverlay) {
-      this.elements.loadingOverlay.style.display = "flex";
-    }
+  isConnected() {
+    return this.connected;
   }
 
-  hideLoading() {
-    if (this.elements.loadingOverlay) {
-      this.elements.loadingOverlay.style.display = "none";
-    }
+  isDemo() {
+    return this.isDemoMode;
   }
 
-  showSuccessModal(address, walletName) {
-    if (this.elements.successModal) {
-      this.elements.walletAddress.textContent = address;
-      this.elements.walletType.textContent = walletName;
-      this.elements.successModal.style.display = "flex";
-    }
+  getBalance() {
+    return this.balance;
   }
 
-  showError(message) {
-    if (this.elements.walletErrorModal && this.elements.walletErrorMessage) {
-      this.elements.walletErrorMessage.innerHTML = `
-        <div style="text-align: center; padding: 20px;">
-          <div style="width: 60px; height: 60px; margin: 0 auto 15px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-            <i class="fas fa-exclamation-triangle" style="font-size: 28px; color: #dc2626;"></i>
-          </div>
-          <h3 style="margin-bottom: 10px; color: #1f2937;">Kết nối thất bại</h3>
-          <p style="color: #6b7280; line-height: 1.5;">${message}</p>
-        </div>
-      `;
-      this.elements.walletErrorModal.style.display = "flex";
-    }
+  getClient() {
+    return this.suiClient;
   }
 
-  setupEventListeners() {
-    // Connect buttons - UPDATED: Mở modal chọn cách kết nối
-    [this.elements.connectWalletBtn, this.elements.connectWalletBtn2].forEach(
-      (btn) => {
-        if (btn) {
-          btn.addEventListener("click", () => {
-            this.showConnectionOptionsModal();
-          });
-        }
-      }
-    );
-
-    if (this.elements.installWalletBtn) {
-      this.elements.installWalletBtn.addEventListener("click", () => {
-        this.showConnectionOptionsModal();
-      });
-    }
-
-    if (this.elements.retryConnectionBtn) {
-      this.elements.retryConnectionBtn.addEventListener("click", () => {
-        this.elements.walletErrorModal.style.display = "none";
-        this.showConnectionOptionsModal();
-      });
-    }
-
-    if (this.elements.tryDemoBtn) {
-      this.elements.tryDemoBtn.addEventListener("click", () => {
-        console.log("🎮 Entering demo mode...");
-        // Xóa tất cả connection cũ trước
-        this.clearStoredConnection(false);
-        // Set demo mode
-        localStorage.setItem("medichain_demo_mode", "true");
-        localStorage.setItem("medichain_connected", "true");
-        // Redirect
-        window.location.href = "dashboard.html";
-      });
-    }
-
-    document.querySelectorAll(".modal-close").forEach((btn) => {
-      btn.addEventListener("click", function () {
-        this.closest(".modal-overlay").style.display = "none";
-      });
-    });
-
-    document.querySelectorAll(".modal-overlay").forEach((overlay) => {
-      overlay.addEventListener("click", function (e) {
-        if (e.target === this) {
-          this.style.display = "none";
-        }
-      });
-    });
-  }
+  // Các hàm modal và UI (giữ nguyên)
+  // ... [giữ nguyên tất cả các hàm showSlushInstructions, connectManualWallet, recheckExtensions, etc.]
 }
 
 // Tạo instance toàn cục
 window.walletManager = new WalletManager();
+// js/wallet.js - THÊM DEBUG FUNCTIONS
+class WalletManager {
+  constructor() {
+    console.log("=== WALLET MANAGER CONSTRUCTOR ===");
+
+    this.availableWallets = [];
+    this.connectedWallet = null;
+    this.isConnecting = false;
+    this.elements = {};
+
+    // State cho blockchain
+    this.suiClient = null;
+    this.address = null;
+    this.balance = "0";
+    this.network = CONFIG?.CURRENT_NETWORK || "TESTNET";
+    this.isDemoMode = false;
+    this.connected = false;
+
+    // Debug
+    console.log("Config loaded:", !!CONFIG);
+    console.log("Sui SDK loaded:", typeof sui);
+
+    // Kiểm tra DOM sẵn sàng
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("DOM ready, initializing...");
+        this.init();
+      });
+    } else {
+      console.log("DOM already ready, initializing...");
+      this.init();
+    }
+  }
+
+  async init() {
+    console.log("🚀 WalletManager Initializing...");
+
+    try {
+      this.cacheElements();
+      console.log("Elements cached:", Object.keys(this.elements));
+
+      // Khởi tạo Sui Client
+      await this.initializeSuiClient();
+
+      this.detectWallets();
+      console.log("Wallets detected:", this.availableWallets.length);
+
+      this.setupEventListeners();
+      console.log("Event listeners setup");
+
+      await this.checkExistingConnection();
+      this.setupAuthCallback();
+
+      // TEST: Thêm debug button
+      this.addDebugButton();
+
+      console.log("✅ WalletManager initialized successfully");
+    } catch (error) {
+      console.error("❌ WalletManager init error:", error);
+    }
+  }
+
+  // Thêm debug button để test
+  addDebugButton() {
+    const debugBtn = document.createElement("button");
+    debugBtn.innerHTML = "🐛 Debug";
+    debugBtn.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    `;
+
+    debugBtn.addEventListener("click", () => {
+      this.showDebugInfo();
+    });
+
+    document.body.appendChild(debugBtn);
+  }
+
+  showDebugInfo() {
+    const debugInfo = `
+      <div class="modal-overlay" style="display: flex; z-index: 10000;">
+        <div class="modal" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+          <div class="modal-header">
+            <h3>🐛 Wallet Debug Info</h3>
+            <button class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</button>
+          </div>
+          <div class="modal-body">
+            <h4>Wallet Manager State:</h4>
+            <pre>${JSON.stringify(
+              {
+                address: this.address,
+                connected: this.connected,
+                isDemoMode: this.isDemoMode,
+                balance: this.balance,
+                network: this.network,
+                availableWallets: this.availableWallets.length,
+              },
+              null,
+              2
+            )}</pre>
+            
+            <h4>Detected Wallets:</h4>
+            <ul>
+              ${this.availableWallets
+                .map((w) => `<li>${w.name} (${w.type})</li>`)
+                .join("")}
+            </ul>
+            
+            <h4>Global Objects:</h4>
+            <pre>${JSON.stringify(
+              {
+                sui: typeof window.sui,
+                suiWallet: typeof window.suiWallet,
+                slush: typeof window.slush,
+                config: typeof CONFIG,
+              },
+              null,
+              2
+            )}</pre>
+            
+            <h4>Local Storage:</h4>
+            <pre>${JSON.stringify(
+              {
+                medichain_connected: localStorage.getItem(
+                  "medichain_connected"
+                ),
+                medichain_wallet_address: localStorage.getItem(
+                  "medichain_wallet_address"
+                ),
+                medichain_demo_mode: localStorage.getItem(
+                  "medichain_demo_mode"
+                ),
+              },
+              null,
+              2
+            )}</pre>
+            
+            <h4>Test Actions:</h4>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+              <button onclick="window.walletManager.testModal()" class="btn btn-sm btn-primary">
+                Test Modal
+              </button>
+              <button onclick="window.walletManager.testDemoMode()" class="btn btn-sm btn-warning">
+                Test Demo Mode
+              </button>
+              <button onclick="window.walletManager.clearStorage()" class="btn btn-sm btn-danger">
+                Clear Storage
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const div = document.createElement("div");
+    div.innerHTML = debugInfo;
+    document.body.appendChild(div.firstElementChild);
+  }
+
+  // Test functions
+  testModal() {
+    this.showConnectionOptionsModal();
+  }
+
+  testDemoMode() {
+    this.enterDemoMode();
+  }
+
+  clearStorage() {
+    localStorage.clear();
+    location.reload();
+  }
+
+  // ... rest of your wallet.js code ...
+}

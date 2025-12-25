@@ -294,24 +294,73 @@
     <!-- Scripts -->
     <script src="../js/config.js"></script>
     <script src="../js/utils.js"></script>
-    <script src="../js/wallet.js"></script>
+    --<script src="../js/wallet.js"></script>
 
     <!-- Landing Page Initialization -->
+    <!-- Scripts -->
+    <!-- 1. Load Sui SDK FIRST -->
+    <script src="https://unpkg.com/@mysten/sui.js/dist/index.umd.js"></script>
+
+    <!-- 2. Load config -->
+    <script src="../js/config.js"></script>
+
+    <!-- 3. Load utils -->
+    <script src="../js/utils.js"></script>
+
+    <!-- 4. Load wallet.js (nó sẽ tự khởi tạo) -->
+    <!script src="../js/wallet.js"></!--script>
+
+    <!-- Landing Page Initialization - SIMPLIFY -->
     <script>
       // Khởi tạo khi DOM ready
       document.addEventListener("DOMContentLoaded", () => {
         console.log("🎯 MediChain Landing Page Loading...");
 
-        // Khởi tạo Wallet Manager
-        if (window.walletManager) {
-          window.walletManager.init();
-        } else {
-          console.error(
-            "❌ Wallet Manager not found. Make sure wallet.js is loaded."
-          );
+        // DEBUG: Kiểm tra walletManager
+        console.log("WalletManager exists:", typeof window.walletManager);
+        console.log("WalletManager instance:", window.walletManager);
+
+        // DEBUG: Kiểm tra các button
+        const connectBtn = document.getElementById("connectWalletBtn");
+        const tryDemoBtn = document.getElementById("tryDemoBtn");
+        console.log("Connect button found:", !!connectBtn);
+        console.log("Try Demo button found:", !!tryDemoBtn);
+
+        // DEBUG: Thêm test click
+        if (connectBtn) {
+          connectBtn.addEventListener("click", function (e) {
+            console.log("🎯 Connect button CLICKED!");
+            e.preventDefault();
+
+            // Test: Hiển thị alert để biết button hoạt động
+            alert("Connect button clicked! Opening wallet connection...");
+
+            // Gọi wallet manager
+            if (
+              window.walletManager &&
+              window.walletManager.showConnectionOptionsModal
+            ) {
+              window.walletManager.showConnectionOptionsModal();
+            } else {
+              console.error("❌ WalletManager not available");
+              alert("WalletManager chưa sẵn sàng. Vui lòng refresh trang.");
+            }
+          });
         }
 
-        // Mobile menu handling
+        if (tryDemoBtn) {
+          tryDemoBtn.addEventListener("click", function (e) {
+            console.log("🎯 Try Demo button CLICKED!");
+            e.preventDefault();
+            alert("Demo mode button clicked!");
+
+            if (window.walletManager && window.walletManager.enterDemoMode) {
+              window.walletManager.enterDemoMode();
+            }
+          });
+        }
+
+        // Mobile menu handling (giữ nguyên)
         const mobileMenuBtn = document.getElementById("mobileMenuBtn");
         const navLinks = document.getElementById("navLinks");
 
@@ -320,7 +369,6 @@
             navLinks.classList.toggle("active");
           });
 
-          // Close mobile menu when clicking on links
           navLinks.querySelectorAll("a").forEach((link) => {
             link.addEventListener("click", () => {
               navLinks.classList.remove("active");
@@ -328,22 +376,17 @@
           });
         }
 
-        // Smooth scrolling for anchor links
+        // Smooth scrolling (giữ nguyên)
         document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
           anchor.addEventListener("click", function (e) {
             e.preventDefault();
-
             const targetId = this.getAttribute("href");
             if (targetId === "#") return;
-
             const targetElement = document.querySelector(targetId);
             if (targetElement) {
-              // Close mobile menu if open
               if (navLinks && navLinks.classList.contains("active")) {
                 navLinks.classList.remove("active");
               }
-
-              // Smooth scroll to target
               window.scrollTo({
                 top: targetElement.offsetTop - 80,
                 behavior: "smooth",

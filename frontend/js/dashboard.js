@@ -1,4 +1,4 @@
-// dashboard.js - Dashboard Page Logic
+// dashboard.js - Dashboard Page Logic (ĐÃ SỬA)
 
 /**
  * Dashboard State
@@ -39,7 +39,7 @@ async function initDashboard() {
     // Update wallet display
     updateWalletDisplay(address);
 
-    // Load dashboard data
+    // Load dashboard data - LOAD DỮ LIỆU THỰC TỪ BLOCKCHAIN
     await loadDashboardData();
 
     // Setup event listeners
@@ -88,14 +88,14 @@ async function updateWalletBalance() {
 }
 
 /**
- * Load dashboard data
+ * Load dashboard data - DỮ LIỆU THỰC TỪ BLOCKCHAIN
  */
 async function loadDashboardData() {
   DashboardState.loading = true;
-  showLoading("Đang tải dữ liệu...");
+  showLoading("Đang tải dữ liệu từ blockchain...");
 
   try {
-    // Load all data in parallel
+    // Load all data in parallel - CHỈ LOAD DỮ LIỆU THỰC
     await Promise.all([
       loadStats(),
       loadRecentRecords(),
@@ -103,10 +103,10 @@ async function loadDashboardData() {
       loadUpcomingAppointments(),
     ]);
 
-    console.log("✅ Dashboard data loaded");
+    console.log("✅ Dashboard data loaded từ blockchain");
   } catch (error) {
     console.error("❌ Error loading dashboard data:", error);
-    showToast("Lỗi tải dữ liệu", "error");
+    showToast("Lỗi tải dữ liệu từ blockchain", "error");
   } finally {
     DashboardState.loading = false;
     hideLoading();
@@ -114,78 +114,158 @@ async function loadDashboardData() {
 }
 
 /**
- * Load statistics
+ * Load statistics - TỪ BLOCKCHAIN
  */
 async function loadStats() {
   try {
-    // TODO: Call blockchain to get real stats
-    // For now, use mock data
+    const address = await window.walletAPI.getWalletAddress();
 
-    const mockStats = {
-      totalRecords: 12,
-      totalPrescriptions: 8,
-      totalAppointments: 3,
-      totalDoctors: 5,
-    };
+    // KIỂM TRA XEM CÓ CONTRACT SERVICE KHÔNG
+    if (!window.contractService) {
+      console.warn("ContractService not available - showing zero stats");
+      displayZeroStats();
+      return;
+    }
 
-    DashboardState.stats = mockStats;
-    displayStats(mockStats);
+    // LOAD DỮ LIỆU THỰC TỪ BLOCKCHAIN
+    try {
+      // 1. Load medical records count từ blockchain
+      const records = await window.contractService
+        .getMedicalRecordsByPatient(address)
+        .catch(() => []);
+      const totalRecords = records ? records.length : 0;
+
+      // 2. Load prescriptions count từ blockchain
+      const prescriptions = await window.contractService
+        .getPrescriptionsByPatient(address)
+        .catch(() => []);
+      const totalPrescriptions = prescriptions ? prescriptions.length : 0;
+
+      // 3. Load appointments count (chưa implement) - để 0
+      const totalAppointments = 0;
+
+      // 4. Load doctors count (chưa implement) - để 0
+      const totalDoctors = 0;
+
+      const realStats = {
+        totalRecords,
+        totalPrescriptions,
+        totalAppointments,
+        totalDoctors,
+      };
+
+      DashboardState.stats = realStats;
+      displayStats(realStats);
+      console.log("📊 Real stats from blockchain:", realStats);
+    } catch (blockchainError) {
+      console.error("Error loading stats from blockchain:", blockchainError);
+      displayZeroStats();
+    }
   } catch (error) {
     console.error("Error loading stats:", error);
-    // Use default values
-    displayStats(DashboardState.stats);
+    displayZeroStats();
   }
+}
+
+/**
+ * Display zero statistics - HIỂN THỊ SỐ 0 THỰC TẾ
+ */
+function displayZeroStats() {
+  const zeroStats = {
+    totalRecords: 0,
+    totalPrescriptions: 0,
+    totalAppointments: 0,
+    totalDoctors: 0,
+  };
+
+  DashboardState.stats = zeroStats;
+  displayStats(zeroStats);
 }
 
 /**
  * Display statistics
  */
 function displayStats(stats) {
-  document.getElementById("totalRecords").textContent = stats.totalRecords;
+  document.getElementById("totalRecords").textContent = stats.totalRecords || 0;
   document.getElementById("totalPrescriptions").textContent =
-    stats.totalPrescriptions;
+    stats.totalPrescriptions || 0;
   document.getElementById("totalAppointments").textContent =
-    stats.totalAppointments;
-  document.getElementById("totalDoctors").textContent = stats.totalDoctors;
+    stats.totalAppointments || 0;
+  document.getElementById("totalDoctors").textContent = stats.totalDoctors || 0;
+
+  // Hiển thị thông báo phù hợp
+  const allZero = stats.totalRecords === 0 && stats.totalPrescriptions === 0;
+  const statsDescription = document.getElementById("statsDescription");
+  if (statsDescription) {
+    statsDescription.textContent = allZero
+      ? "Chưa có dữ liệu. Hãy tạo hồ sơ đầu tiên!"
+      : `Cập nhật từ blockchain lúc ${new Date().toLocaleTimeString("vi-VN")}`;
+  }
 }
 
 /**
- * Load recent medical records
+ * Load recent medical records - TỪ BLOCKCHAIN
  */
 async function loadRecentRecords() {
   try {
-    // TODO: Call blockchain to get real data
-    // For now, use mock data
+    const address = await window.walletAPI.getWalletAddress();
 
-    const mockRecords = [
-      {
-        id: "1",
-        date: "2024-12-15",
-        diagnosis: "Khám tổng quát",
-        doctor: "BS. Nguyễn Văn A",
-        status: "completed",
-      },
-      {
-        id: "2",
-        date: "2024-12-10",
-        diagnosis: "Tái khám tim mạch",
-        doctor: "BS. Trần Thị B",
-        status: "completed",
-      },
-      {
-        id: "3",
-        date: "2024-12-05",
-        diagnosis: "Xét nghiệm máu",
-        doctor: "BS. Lê Văn C",
-        status: "completed",
-      },
-    ];
+    // KIỂM TRA CONTRACT SERVICE
+    if (!window.contractService) {
+      console.warn("ContractService not available");
+      displayEmptyStateWithAction(
+        "recentRecords",
+        "Hệ thống blockchain đang khởi tạo",
+        "Vui lòng thử lại sau",
+        () => handleRefresh()
+      );
+      return;
+    }
 
-    DashboardState.recentRecords = mockRecords;
-    displayRecentRecords(mockRecords);
+    // LOAD DỮ LIỆU THỰC TỪ BLOCKCHAIN
+    try {
+      const records = await window.contractService.getMedicalRecordsByPatient(
+        address
+      );
+
+      if (records && records.length > 0) {
+        // Có dữ liệu thực - format và hiển thị
+        const formattedRecords = records.slice(0, 5).map((record) => ({
+          id: record.id || record.objectId,
+          date: record.createdAt || new Date().toISOString().split("T")[0],
+          diagnosis: record.diagnosis || "Khám bệnh",
+          doctor: record.doctorName || "Bác sĩ",
+          status: "completed",
+          details: record.treatment || record.notes || "",
+        }));
+
+        DashboardState.recentRecords = formattedRecords;
+        displayRecentRecords(formattedRecords);
+        console.log("📋 Real records loaded:", formattedRecords.length);
+      } else {
+        // KHÔNG CÓ DỮ LIỆU - hiển thị empty state
+        DashboardState.recentRecords = [];
+        displayEmptyStateWithAction(
+          "recentRecords",
+          "Chưa có bệnh án nào",
+          "Tạo bệnh án đầu tiên",
+          () => (window.location.href = "create-medical-record.html")
+        );
+      }
+    } catch (blockchainError) {
+      console.error("Error loading records from blockchain:", blockchainError);
+      DashboardState.recentRecords = [];
+      displayEmptyStateWithAction(
+        "recentRecords",
+        "Lỗi kết nối blockchain",
+        "Thử lại",
+        () => handleRefresh()
+      );
+    }
   } catch (error) {
     console.error("Error loading records:", error);
-    displayEmptyState("recentRecords", "Chưa có bệnh án nào");
+    DashboardState.recentRecords = [];
+    displayEmptyState("recentRecords", "Lỗi tải dữ liệu");
   }
 }
 
@@ -198,7 +278,12 @@ function displayRecentRecords(records) {
   if (!container) return;
 
   if (records.length === 0) {
-    displayEmptyState("recentRecords", "Chưa có bệnh án nào");
+    displayEmptyStateWithAction(
+      "recentRecords",
+      "Chưa có bệnh án nào",
+      "Tạo bệnh án đầu tiên",
+      () => (window.location.href = "create-medical-record.html")
+    );
     return;
   }
 
@@ -209,6 +294,14 @@ function displayRecentRecords(records) {
       <div class="item-info">
         <h4>${record.diagnosis}</h4>
         <p>${formatDate(record.date)} - ${record.doctor}</p>
+        ${
+          record.details
+            ? `<small class="text-muted">${record.details.substring(
+                0,
+                50
+              )}...</small>`
+            : ""
+        }
       </div>
       <span class="item-badge badge-success">Hoàn thành</span>
     </div>
@@ -220,41 +313,90 @@ function displayRecentRecords(records) {
 }
 
 /**
- * Load recent prescriptions
+ * Load recent prescriptions - TỪ BLOCKCHAIN
  */
 async function loadRecentPrescriptions() {
   try {
-    // TODO: Call blockchain to get real data
+    const address = await window.walletAPI.getWalletAddress();
 
-    const mockPrescriptions = [
-      {
-        id: "1",
-        date: "2024-12-15",
-        name: "Đơn thuốc huyết áp",
-        duration: "30 ngày",
-        status: "active",
-      },
-      {
-        id: "2",
-        date: "2024-12-10",
-        name: "Thuốc kháng sinh",
-        duration: "7 ngày",
-        status: "completed",
-      },
-      {
-        id: "3",
-        date: "2024-12-01",
-        name: "Vitamin tổng hợp",
-        duration: "60 ngày",
-        status: "active",
-      },
-    ];
+    // KIỂM TRA CONTRACT SERVICE
+    if (!window.contractService) {
+      console.warn("ContractService not available");
+      displayEmptyStateWithAction(
+        "recentPrescriptions",
+        "Hệ thống blockchain đang khởi tạo",
+        "Vui lòng thử lại sau",
+        () => handleRefresh()
+      );
+      return;
+    }
 
-    DashboardState.recentPrescriptions = mockPrescriptions;
-    displayRecentPrescriptions(mockPrescriptions);
+    // LOAD DỮ LIỆU THỰC TỪ BLOCKCHAIN
+    try {
+      const prescriptions =
+        await window.contractService.getPrescriptionsByPatient(address);
+
+      if (prescriptions && prescriptions.length > 0) {
+        // Có dữ liệu thực - format và hiển thị
+        const formattedPrescriptions = prescriptions
+          .slice(0, 5)
+          .map((prescription) => {
+            const now = new Date();
+            const created = new Date(prescription.createdAt || now);
+            const duration = parseInt(prescription.duration) || 30;
+            const endDate = new Date(
+              created.getTime() + duration * 24 * 60 * 60 * 1000
+            );
+            const isActive = now <= endDate;
+
+            return {
+              id: prescription.id || prescription.objectId,
+              date:
+                prescription.createdAt ||
+                new Date().toISOString().split("T")[0],
+              name: prescription.medication || "Đơn thuốc",
+              medications: prescription.medications
+                ? prescription.medications.split(",")
+                : [prescription.medication || "Thuốc"],
+              duration: `${duration} ngày`,
+              status: isActive ? "active" : "completed",
+              doctor: prescription.doctorName || "Bác sĩ",
+            };
+          });
+
+        DashboardState.recentPrescriptions = formattedPrescriptions;
+        displayRecentPrescriptions(formattedPrescriptions);
+        console.log(
+          "💊 Real prescriptions loaded:",
+          formattedPrescriptions.length
+        );
+      } else {
+        // KHÔNG CÓ DỮ LIỆU - hiển thị empty state
+        DashboardState.recentPrescriptions = [];
+        displayEmptyStateWithAction(
+          "recentPrescriptions",
+          "Chưa có đơn thuốc nào",
+          "Tạo đơn thuốc đầu tiên",
+          () => (window.location.href = "create-prescription.html")
+        );
+      }
+    } catch (blockchainError) {
+      console.error(
+        "Error loading prescriptions from blockchain:",
+        blockchainError
+      );
+      DashboardState.recentPrescriptions = [];
+      displayEmptyStateWithAction(
+        "recentPrescriptions",
+        "Lỗi kết nối blockchain",
+        "Thử lại",
+        () => handleRefresh()
+      );
+    }
   } catch (error) {
     console.error("Error loading prescriptions:", error);
-    displayEmptyState("recentPrescriptions", "Chưa có đơn thuốc nào");
+    DashboardState.recentPrescriptions = [];
+    displayEmptyState("recentPrescriptions", "Lỗi tải dữ liệu");
   }
 }
 
@@ -267,7 +409,12 @@ function displayRecentPrescriptions(prescriptions) {
   if (!container) return;
 
   if (prescriptions.length === 0) {
-    displayEmptyState("recentPrescriptions", "Chưa có đơn thuốc nào");
+    displayEmptyStateWithAction(
+      "recentPrescriptions",
+      "Chưa có đơn thuốc nào",
+      "Tạo đơn thuốc đầu tiên",
+      () => (window.location.href = "create-prescription.html")
+    );
     return;
   }
 
@@ -278,6 +425,15 @@ function displayRecentPrescriptions(prescriptions) {
       <div class="item-info">
         <h4>${prescription.name}</h4>
         <p>${formatDate(prescription.date)} - ${prescription.duration}</p>
+        ${
+          prescription.medications && prescription.medications.length > 0
+            ? `<small class="text-muted">${prescription.medications
+                .slice(0, 2)
+                .join(", ")}${
+                prescription.medications.length > 2 ? "..." : ""
+              }</small>`
+            : ""
+        }
       </div>
       <span class="item-badge ${
         prescription.status === "active" ? "badge-warning" : "badge-success"
@@ -293,41 +449,62 @@ function displayRecentPrescriptions(prescriptions) {
 }
 
 /**
- * Load upcoming appointments
+ * Load upcoming appointments - TỪ BLOCKCHAIN
  */
 async function loadUpcomingAppointments() {
   try {
-    // TODO: Call blockchain to get real data
+    const address = await window.walletAPI.getWalletAddress();
 
-    const mockAppointments = [
-      {
-        id: "1",
-        date: "2024-12-25",
-        time: "09:00",
-        type: "Khám tim mạch",
-        doctor: "BS. Nguyễn Văn A",
-      },
-      {
-        id: "2",
-        date: "2024-12-28",
-        time: "14:00",
-        type: "Tái khám",
-        doctor: "BS. Trần Thị B",
-      },
-      {
-        id: "3",
-        date: "2025-01-02",
-        time: "08:30",
-        type: "Xét nghiệm định kỳ",
-        doctor: "BS. Lê Văn C",
-      },
-    ];
+    // KIỂM TRA CONTRACT SERVICE
+    if (!window.contractService) {
+      console.warn("ContractService not available");
+      displayEmptyStateWithAction(
+        "upcomingAppointments",
+        "Hệ thống blockchain đang khởi tạo",
+        "Vui lòng thử lại sau",
+        () => handleRefresh()
+      );
+      return;
+    }
 
-    DashboardState.upcomingAppointments = mockAppointments;
-    displayUpcomingAppointments(mockAppointments);
+    // LOAD DỮ LIỆU THỰC TỪ BLOCKCHAIN
+    // (Giả sử có hàm getAppointmentsByPatient)
+    try {
+      // Hiện tại chưa có contract cho appointments
+      // Để mảng rỗng cho chính xác
+      const appointments = [];
+
+      if (appointments.length > 0) {
+        // Có dữ liệu thực
+        DashboardState.upcomingAppointments = appointments.slice(0, 5);
+        displayUpcomingAppointments(appointments);
+      } else {
+        // KHÔNG CÓ DỮ LIỆU - hiển thị empty state
+        DashboardState.upcomingAppointments = [];
+        displayEmptyStateWithAction(
+          "upcomingAppointments",
+          "Chưa có lịch hẹn nào",
+          "Đặt lịch hẹn đầu tiên",
+          () => (window.location.href = "create-appointment.html")
+        );
+      }
+    } catch (blockchainError) {
+      console.error(
+        "Error loading appointments from blockchain:",
+        blockchainError
+      );
+      DashboardState.upcomingAppointments = [];
+      displayEmptyStateWithAction(
+        "upcomingAppointments",
+        "Lỗi kết nối blockchain",
+        "Thử lại",
+        () => handleRefresh()
+      );
+    }
   } catch (error) {
     console.error("Error loading appointments:", error);
-    displayEmptyState("upcomingAppointments", "Chưa có lịch hẹn nào");
+    DashboardState.upcomingAppointments = [];
+    displayEmptyState("upcomingAppointments", "Lỗi tải dữ liệu");
   }
 }
 
@@ -340,7 +517,12 @@ function displayUpcomingAppointments(appointments) {
   if (!container) return;
 
   if (appointments.length === 0) {
-    displayEmptyState("upcomingAppointments", "Chưa có lịch hẹn nào");
+    displayEmptyStateWithAction(
+      "upcomingAppointments",
+      "Chưa có lịch hẹn nào",
+      "Đặt lịch hẹn đầu tiên",
+      () => (window.location.href = "create-appointment.html")
+    );
     return;
   }
 
@@ -364,7 +546,31 @@ function displayUpcomingAppointments(appointments) {
 }
 
 /**
- * Display empty state
+ * Display empty state với action button
+ */
+function displayEmptyStateWithAction(
+  containerId,
+  message,
+  actionText,
+  actionCallback
+) {
+  const container = document.getElementById(containerId);
+
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="empty-state">
+      <i class="fas fa-inbox"></i>
+      <p>${message}</p>
+      <button onclick="(${actionCallback.toString()})()" class="btn btn-outline btn-sm">
+        <i class="fas fa-plus"></i> ${actionText}
+      </button>
+    </div>
+  `;
+}
+
+/**
+ * Display empty state (giữ nguyên của bạn)
  */
 function displayEmptyState(containerId, message) {
   const container = document.getElementById(containerId);
@@ -380,7 +586,7 @@ function displayEmptyState(containerId, message) {
 }
 
 /**
- * Setup event listeners
+ * Setup event listeners (giữ nguyên)
  */
 function setupEventListeners() {
   // Disconnect button
@@ -415,7 +621,7 @@ function setupEventListeners() {
 }
 
 /**
- * Handle disconnect
+ * Handle disconnect (giữ nguyên)
  */
 async function handleDisconnect() {
   const confirmed = confirm("Bạn có chắc muốn ngắt kết nối ví?");
@@ -442,9 +648,9 @@ async function handleDisconnect() {
  * Handle refresh
  */
 async function handleRefresh() {
-  showToast("Đang làm mới dữ liệu...", "info");
+  showToast("Đang làm mới dữ liệu từ blockchain...", "info");
   await loadDashboardData();
-  showToast("Đã làm mới!", "success");
+  showToast("Đã làm mới dữ liệu blockchain!", "success");
 }
 
 /**
@@ -492,6 +698,29 @@ function viewWalletOnExplorer() {
   }
 }
 
+// Thêm các hàm format hỗ trợ
+function formatDate(dateString) {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("vi-VN");
+}
+
+function formatCurrency(amount) {
+  if (!amount) return "0 SUI";
+  return `${parseFloat(amount).toFixed(4)} SUI`;
+}
+
+function copyToClipboard(text, message) {
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(message || "Đã sao chép!", "success");
+  });
+}
+
+function getExplorerAddressUrl(address) {
+  const network = CONFIG?.NETWORK || "testnet";
+  return `https://suiexplorer.com/address/${address}?network=${network}`;
+}
+
 // ===== AUTO-INITIALIZE =====
 
 if (document.readyState === "loading") {
@@ -500,4 +729,4 @@ if (document.readyState === "loading") {
   initDashboard();
 }
 
-console.log("✅ Dashboard script loaded");
+console.log("✅ Dashboard script loaded - BLOCKCHAIN MODE");
